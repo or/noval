@@ -5,8 +5,11 @@ Wrapper around the Stanford Parser.
 import sys
 from java.io import StringReader
 
-JAR_FILE = '/home/thi/stanford-postagger/stanford-postagger.jar'
-MODEL = '/home/thi/stanford-postagger/models/english-bidirectional-distsim.tagger'
+sys.path.append('slf4j-1.7.13/slf4j-api-1.7.13.jar')
+sys.path.append('slf4j-1.7.13/slf4j-simple-1.7.13.jar')
+
+JAR_FILE = 'stanford-postagger/stanford-postagger.jar'
+MODEL = 'stanford-postagger/models/english-bidirectional-distsim.tagger'
 
 
 def load_stanford_postagger():

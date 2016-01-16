@@ -1,4 +1,4 @@
-#!/usr/bin/jython
+#!/usr/bin/env jython
 """
 
 """
@@ -18,7 +18,7 @@ SPEECH_INFO = 2
 
 def paragraph_reader(input_filename):
     last_line = None
-    for line in file(input_filename):
+    for line in open(input_filename):
         line = line.strip()
         if not line:
             continue
