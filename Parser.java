@@ -47,10 +47,10 @@ public class Parser {
                     for (List<TaggedWord> taggedSentence : taggedSentences) {
                         JSONArray sentence = new JSONArray();
                         for (TaggedWord word: taggedSentence) {
-                            JSONArray tuple = new JSONArray();
-                            tuple.put(word.word());
-                            tuple.put(word.tag());
-                            sentence.put(tuple);
+                            JSONObject info = new JSONObject();
+                            info.put("word", word.word());
+                            info.put("tag", word.tag());
+                            sentence.put(info);
                         }
                         sentences.put(sentence);
                     }
