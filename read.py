@@ -105,7 +105,7 @@ def read(input_filename, output):
         chapter['paragraphs'].append(paragraph)
 
     novel['chapters'].append(chapter)
-    json.dump(novel, open(output + '.json', 'w'), indent=True)
+    json.dump(novel, open(output, 'w'), indent=True)
 
 
 if __name__ == '__main__':
@@ -116,5 +116,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     if not args.output:
-        args.output = args.input + '.parsed'
+        args.output = args.input + '.read'
     read(args.input, args.output)
