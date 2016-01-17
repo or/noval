@@ -10,10 +10,11 @@ import json
 CHAPTER = re.compile(r'^[A-Z]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
+INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted)\W.*')
 
-NARRATION = 'narration'
-SPEECH = 'speech'
-SPEECH_INFO = 'speech_info'
+INDIRECT = 'indirect'
+DIRECT = 'direct'
+INQUIT = 'inquit'
 
 
 def paragraph_reader(input_filename):
@@ -47,6 +48,24 @@ def paragraph_reader(input_filename):
         yield last_line
 
 
+def looks_like_inquit(chunk, previous_chunk):
+    chunk = chunk.strip()
+    previous_chunk = previous_chunk.strip()
+    if not chunk:
+        return False
+
+    if previous_chunk.endswith(','):
+        return True
+
+    if chunk[0] == chunk[0].lower():
+        return True
+
+    if INQUIT_KEYWORDS.match(chunk):
+        return True
+
+    return False
+
+
 def read(input_filename, output):
     """
     Read and parse novel, pickle to output file.
@@ -58,6 +77,7 @@ def read(input_filename, output):
         if CHAPTER.match(p):
             if chapter:
                 novel['chapters'].append(chapter)
+
             chapter = {
                 'name': p,
                 'paragraphs': [],
@@ -65,27 +85,22 @@ def read(input_filename, output):
             continue
 
         chunks = QUOTES.split(p)
-        paragraph = {
-            NARRATION: '',
-            SPEECH: '',
-            SPEECH_INFO: '',
-        }
+        paragraph = []
         flag = None
-        last_flag = None
+        last_chunk = ''
         for chunk in chunks:
-            last_flag = flag
-            flag = SPEECH if flag == NARRATION else NARRATION
+            flag = DIRECT if flag == INDIRECT else INDIRECT
 
             chunk = chunk.strip()
-            if flag == SPEECH and chunk.endswith(','):
-                chunk = chunk[:-1] + '.'
 
-            if last_flag == SPEECH:
-                paragraph[SPEECH_INFO] += ' ' + chunk
+            if flag == INDIRECT and looks_like_inquit(chunk, last_chunk):
+                paragraph.append(('inquit', chunk))
             else:
-                paragraph[flag] += ' ' + chunk
+                paragraph.append((flag, chunk))
 
-        paragraph = {k: v.strip() for k, v in paragraph.items() if v.strip()}
+            last_chunk = chunk
+
+        paragraph = [(k, v) for k, v in paragraph if v.strip()]
 
         chapter['paragraphs'].append(paragraph)
 
