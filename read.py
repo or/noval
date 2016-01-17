@@ -94,13 +94,13 @@ def read(input_filename, output):
             chunk = chunk.strip()
 
             if flag == INDIRECT and looks_like_inquit(chunk, last_chunk):
-                paragraph.append(('inquit', chunk))
+                paragraph.append(dict(type='inquit', data=chunk))
             else:
-                paragraph.append((flag, chunk))
+                paragraph.append(dict(type=flag, data=chunk))
 
             last_chunk = chunk
 
-        paragraph = [(k, v) for k, v in paragraph if v.strip()]
+        paragraph = [x for x in paragraph if x['data']]
 
         chapter['paragraphs'].append(paragraph)
 
