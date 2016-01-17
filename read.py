@@ -1,19 +1,19 @@
-#!/usr/bin/env jython
+#!/usr/bin/env python3
 """
 
 """
 import argparse
 import re
-import pickle
+import json
 
 
 CHAPTER = re.compile(r'^[A-Z]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
 
-NORMAL = 0
-SPEECH = 1
-SPEECH_INFO = 2
+NARRATION = 'narration'
+SPEECH = 'speech'
+SPEECH_INFO = 'speech_info'
 
 
 def paragraph_reader(input_filename):
@@ -52,26 +52,29 @@ def read(input_filename, output):
     Read and parse novel, pickle to output file.
 
     """
-    from parser import load_stanford_postagger, get_tags
-    tagger = load_stanford_postagger()
-    chapter = None
-    paragraphs = []
-    novel = []
+    novel = {'chapters': []}
+    chapter = {}
     for p in paragraph_reader(input_filename):
         if CHAPTER.match(p):
             if chapter:
-                novel.append((chapter, paragraphs))
-                paragraphs = []
-            chapter = p
+                novel['chapters'].append(chapter)
+            chapter = {
+                'name': p,
+                'paragraphs': [],
+            }
             continue
 
         chunks = QUOTES.split(p)
-        paragraph = ['', '', '']
+        paragraph = {
+            NARRATION: '',
+            SPEECH: '',
+            SPEECH_INFO: '',
+        }
         flag = None
         last_flag = None
         for chunk in chunks:
             last_flag = flag
-            flag = SPEECH if flag == NORMAL else NORMAL
+            flag = SPEECH if flag == NARRATION else NARRATION
 
             chunk = chunk.strip()
             if flag == SPEECH and chunk.endswith(','):
@@ -82,15 +85,12 @@ def read(input_filename, output):
             else:
                 paragraph[flag] += ' ' + chunk
 
-        for i in range(3):
-            paragraph[i] = paragraph[i].strip()
-            if paragraph[i]:
-                paragraph[i] = get_tags(tagger, paragraph[i])
+        paragraph = {k: v.strip() for k, v in paragraph.items() if v.strip()}
 
-        paragraphs.append(paragraph)
+        chapter['paragraphs'].append(paragraph)
 
-    novel.append((chapter, paragraphs))
-    pickle.dump(novel, open(output, 'w'))
+    novel['chapters'].append(chapter)
+    json.dump(novel, open(output + '.json', 'w'), indent=True)
 
 
 if __name__ == '__main__':
