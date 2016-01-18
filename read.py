@@ -11,10 +11,12 @@ CHAPTER = re.compile(r'^[A-Z]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
 INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted)\W.*')
+QUOTED_TEXT = re.compile(r'^[A-Za-z0-9 ]+$')
 
 INDIRECT = 'indirect'
 DIRECT = 'direct'
 INQUIT = 'inquit'
+RUN_ON_DIRECT = "<run-on-direct>"
 
 
 def paragraph_reader(input_filename):
@@ -66,6 +68,26 @@ def looks_like_inquit(chunk, previous_chunk):
     return False
 
 
+def split_direct_indirect(paragraph):
+    chunks = QUOTES.split(paragraph)
+    result = []
+    i = 0
+    while i < len(chunks):
+        if (i > 0 and chunks[i - 1].strip() and
+           chunks[i - 1].strip()[-1].isalpha() and
+           chunks[i] and QUOTED_TEXT.match(chunks[i])):
+            result[-1] += '"{}"{}'.format(chunks[i], chunks[i + 1])
+            i += 2
+
+        else:
+            result.append(chunks[i])
+            i += 1
+
+    if len(result) % 2 == 0 and not paragraph.strip().endswith('"'):
+        result.append(RUN_ON_DIRECT)
+
+    return result
+
 def read(input_filename, output):
     """
     Read and parse novel, pickle to output file.
@@ -84,11 +106,10 @@ def read(input_filename, output):
             }
             continue
 
-        chunks = QUOTES.split(p)
         paragraph = []
         flag = None
         last_chunk = ''
-        for chunk in chunks:
+        for chunk in split_direct_indirect(p):
             flag = DIRECT if flag == INDIRECT else INDIRECT
 
             chunk = chunk.strip()
@@ -102,7 +123,17 @@ def read(input_filename, output):
 
         paragraph = [x for x in paragraph if x['data']]
 
-        chapter['paragraphs'].append(paragraph)
+        last_paragraph = chapter['paragraphs'][-1] if chapter['paragraphs'] else None
+        if (last_paragraph and
+           len(last_paragraph) > 1 and
+           last_paragraph[-2]['type'] == DIRECT and
+           last_paragraph[-1]['data'] == RUN_ON_DIRECT and
+           paragraph[0]['type'] == DIRECT):
+            last_paragraph.pop(-1)
+            last_paragraph[-1]['data'] += " " + paragraph[0]['data']
+            last_paragraph += paragraph[1:]
+        else:
+            chapter['paragraphs'].append(paragraph)
 
     novel['chapters'].append(chapter)
     json.dump(novel, open(output, 'w'), indent=True)
