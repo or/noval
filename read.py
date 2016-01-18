@@ -38,6 +38,7 @@ def paragraph_reader(input_filename):
 
             elif line.startswith('"'):
                 yield last_line
+
             else:
                 line = last_line + ' ' + line
 
@@ -90,6 +91,7 @@ def split_direct_indirect(paragraph):
         result.append(RUN_ON_DIRECT)
 
     return result
+
 
 def read(input_filename, output):
     """
