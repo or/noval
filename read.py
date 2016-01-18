@@ -29,10 +29,13 @@ def paragraph_reader(input_filename):
         if last_line:
             if last_line.endswith('-'):
                 if line.startswith('-'):
+                    # todo: unsure what this was suppsoed to do
+                    raise Exception("ugh?")
                     yield last_line + '"'
                     line = '"' + line
                 else:
                     line = last_line[:-1] + line
+
             elif line.startswith('"'):
                 yield last_line
             else:
