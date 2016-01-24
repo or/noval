@@ -1,5 +1,8 @@
 import json
+import re
 from collections import defaultdict
+
+ENTITY = re.compile(r'P(s?(p?[NP]s?)*(a|ia|oa|o)?(p?[NP]s?)*(p?[NP]))*')
 
 
 def _set2list(entities, path):
@@ -43,10 +46,10 @@ class EntityDatabase(object):
 
     def __init__(self):
         self.entities = self._get_empty_entities()
-        self.known = self.get_all_known_entities()
+        self.build_reverse_map()
 
-    @classmethod
-    def _get_empty_entities(cls):
+    @staticmethod
+    def _get_empty_entities():
         return {
             'person': {},
             'organization': {},
@@ -79,116 +82,132 @@ class EntityDatabase(object):
         self.entities.update(read_entities)
         self._ensure_sets()
 
-        self.known = self.get_all_known_entities()
+        self.build_reverse_map()
 
     def save(self, filename):
         self._ensure_lists()
         json.dump(self.entities, open(filename, 'w'), indent=4)
         self._ensure_sets()
 
-    def get_all_known_entities(self):
-        known = set()
+    def build_reverse_map(self):
+        self.reverse_map = defaultdict(set)
         for kind in ('person', 'organization', 'place'):
-            for word in self.entities['title'][kind]:
-                known.add(word)
+            for entity, aliases in self.entities[kind].items():
+                self.reverse_map[entity].add(tuple([kind, entity]))
+                for alias in aliases:
+                    self.reverse_map[alias].add(tuple([kind, entity]))
 
-            for word in self.entities[kind]:
-                known.add(word)
-                for w in self.entities[kind][word]:
-                    known.add(w)
+            for title in self.entities['title'][kind]:
+                self.reverse_map[title].add(tuple(['title', kind]))
 
-        for word in self.entities['ignore']:
-            known.add(word)
-
-        return known
-
-    def compact(self):
-        """
-        Remove unknown single words that occur in already known entities.
-        These will be first names, last names, parts of the place name and so on.
-        """
-        single_words = defaultdict(list)
-        full = set()
-
-        for kind in ('person', 'organization', 'place'):
-            for entity in self.entities[kind]:
-                full.add(entity)
-                for word in entity.split():
-                    single_words[word].append([kind, entity])
-
-                for alias in self.entities[kind][entity]:
-                    full.add(alias)
-                    for word in alias.split():
-                        single_words[word].append([kind, entity])
-
-        # using a copied list here, allows mutating the set inside the loop
-        for x in list(self.entities['unknown']):
-            if x in single_words or x in full:
-                self.entities['unknown'].remove(x)
-                for path in single_words[x]:
-                    self.entities[path[0]][path[1]].add(x)
-
-            elif x.endswith('s'):
-                singular = x[:-1]
-                if singular in single_words:
-                    self.entities['unknown'].remove(x)
-                    for path in single_words[singular]:
-                        if path[0] == 'organization':
-                            self.entities[path[0]][path[1]].add(x)
-
-        for word in single_words:
-            for path in single_words[word]:
-                self.entities[path[0]][path[1]].add(word)
-
-        self.known = self.get_all_known_entities()
+        for entity in self.entities['ignore']:
+            self.reverse_map[entity].add(tuple(['ignore']))
 
     def enumerate_entities(self, tagged_words):
         def assemble(words):
-            return ' '.join(x['word'] for x in words)
+            s = ' '.join(x['word'] for x in words)
+            return s.replace(" 's", "'s")
 
-        last_words = []
-        for word in tagged_words:
-            if word['tag'] != 'NNP' or word['word'] in self.entities['ignore']:
-                if last_words:
-                    entity = assemble(last_words)
-                    if entity not in self.entities['ignore']:
-                        yield entity
+        def represent(tagged_word):
+            tag = tagged_word['tag']
+            word = tagged_word['word']
 
-                    last_words = []
+            if word in self.entities['ignore'] or word.lower() in self.entities['ignore']:
+                return 'x'
 
-                continue
+            elif tag in ('NNP', 'NNPS'):
+                return 'P'
 
-            last_words.append(word)
+            elif tag == 'NN' and word[0] == word[0].upper():
+                return 'N'
 
-        if last_words:
-            yield assemble(last_words)
+            elif word.lower() == 'in':
+                return 'i'
+
+            elif word.lower() == 'of':
+                return 'o'
+
+            elif tag == 'DT':
+                return 'a'
+
+            elif tag == 'POS':
+                return 's'
+
+            elif tag == 'PRP$':
+                return 'p'
+
+            return 'x'
+
+        tag_string = ''.join(represent(x) for x in tagged_words)
+        for mo in ENTITY.finditer(tag_string):
+            entity = assemble(tagged_words[mo.start():mo.end()])
+            yield entity
 
     def add(self, entity):
         if not entity:
             return
 
-        for kind in ('person', 'organization'):
+        if entity in self.entities['ignore']:
+            return
+
+        if entity in self.reverse_map:
+            return
+
+        added = False
+        for kind in ('person', 'organization', 'place'):
             for title in self.entities['title'][kind]:
                 if entity == title:
-                    return
+                    continue
 
                 if not entity.startswith(title + ' '):
                     continue
 
-                raw_entity = entity[len(title) + 1:]
-                aliases = self.entities[kind].get(raw_entity, set())
-                if raw_entity != entity:
-                    aliases.add(entity)
+                real_entity = entity[len(title) + 1:]
+                if real_entity[0] != real_entity[0].upper():
+                    # these will be titles, like "Warden of the North",
+                    # we only auto classify entities that start with an
+                    # uppercase letter after the title
+                    continue
 
-                aliases.add(title)
-                self.entities[kind][raw_entity] = aliases
+                if real_entity not in self.entities[kind]:
+                    self.entities[kind][real_entity] = set()
 
-                return
+                self.entities[kind][real_entity].add(title)
+                if real_entity != entity:
+                    self.entities[kind][real_entity].add(entity)
 
-        self.entities['unknown'].add(entity)
-        self.known.add(entity)
+                self.reverse_map[entity].add(tuple(['title', kind, real_entity]))
+                self.reverse_map[real_entity].add(tuple(['title', kind, real_entity]))
+                added = True
+
+        for kind in ('person', 'organization', 'place'):
+            for known_entity in self.entities[kind]:
+                if entity == known_entity:
+                    continue
+
+                if not (entity.startswith(known_entity + ' ') or
+                        entity in known_entity.split()):
+                    continue
+
+                self.entities[kind][known_entity].add(entity)
+
+                self.reverse_map[entity].add(tuple(['title', kind, known_entity]))
+                added = True
+
+        if not added:
+            self.entities['unknown'].add(entity)
 
     def get_stats(self):
         stats = {'num_' + k: len(v) for k, v in self.entities.items()}
 
         return stats
+
+    def clear_unknown(self):
+        self.entities['unknown'] = set()
+
+    def clear_aliases(self):
+        for kind in ('person', 'organization', 'place'):
+            for key in self.entities[kind]:
+                self.entities[kind][key] = set()
+
+        self.build_reverse_map()
