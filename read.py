@@ -3,11 +3,10 @@
 
 """
 import argparse
-import re
 import json
+import re
 
-
-CHAPTER = re.compile(r'^[A-Z]+$')
+CHAPTER = re.compile(r'^[A-Z ]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
 INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted)\W.*')
@@ -24,6 +23,14 @@ def paragraph_reader(input_filename):
     for line in open(input_filename):
         line = line.strip()
         if not line:
+            continue
+
+        if CHAPTER.match(line):
+            if last_line:
+                yield last_line
+
+            yield line
+            last_line = None
             continue
 
         if last_line:
