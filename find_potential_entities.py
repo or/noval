@@ -16,6 +16,8 @@ ENTITIES_FILENAME = 'entities.json'
 def process(novel):
     entities = EntityDatabase()
     entities.load(ENTITIES_FILENAME)
+    entities.clear_unknown()
+    # entities.clear_aliases()
 
     chapters = novel['chapters']
     total_number_paragraphs = \
@@ -38,7 +40,6 @@ def process(novel):
 
     pbar.finish()
 
-    entities.compact()
     entities.save("generated." + ENTITIES_FILENAME)
 
     print(entities.get_stats())
