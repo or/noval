@@ -3,18 +3,6 @@ class Entity(object):
         self.name = name
         self.aliases = set([name])
 
-    @staticmethod
-    def get(tree):
-        name = ' '.join(map(lambda x: x[0], tree.leaves()))
-        if tree.node == 'PERSON':
-            return Character(name)
-        elif tree.node == 'ORGANIZATION':
-            return Organization(name)
-        elif tree.node == 'GPE':
-            return Place(name)
-        else:
-            raise Exception('unknown entity type: %s' % tree.node)
-
     def __unicode__(self):
         return '%s:%s' % (self.__class__.__name__, self.name)
 
