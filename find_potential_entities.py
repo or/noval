@@ -8,16 +8,14 @@ import json
 
 from progressbar import ETA, Bar, Percentage, ProgressBar
 
-from entities import (add_entity, compact_entities, enumerate_entities,
-                      get_all_known_entities, get_entities_stats,
-                      load_entities, store_entities)
+from entities import EntityDatabase
+
+ENTITIES_FILENAME = 'entities.json'
 
 
 def process(novel):
-    entities = load_entities()
-    entities['unknown'] = set()
-
-    known = get_all_known_entities(entities)
+    entities = EntityDatabase()
+    entities.load(ENTITIES_FILENAME)
 
     chapters = novel['chapters']
     total_number_paragraphs = \
@@ -35,15 +33,15 @@ def process(novel):
                     pbar.update(num_sentences)
                     num_sentences += 1
 
-                    for entity in enumerate_entities(sentence['words'], entities):
-                        add_entity(entities, known, entity)
+                    for entity in entities.enumerate_entities(sentence['words']):
+                        entities.add(entity)
 
     pbar.finish()
 
-    compact_entities(entities)
-    store_entities(entities)
+    entities.compact()
+    entities.save("generated." + ENTITIES_FILENAME)
 
-    print(get_entities_stats(entities))
+    print(entities.get_stats())
 
 
 if __name__ == '__main__':
