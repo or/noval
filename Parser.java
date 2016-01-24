@@ -45,13 +45,15 @@ public class Parser {
 
                     JSONArray sentences = new JSONArray();
                     for (List<TaggedWord> taggedSentence : taggedSentences) {
-                        JSONArray sentence = new JSONArray();
+                        JSONObject sentence = new JSONObject();
+                        JSONArray words  = new JSONArray();
                         for (TaggedWord word: taggedSentence) {
                             JSONObject info = new JSONObject();
                             info.put("word", word.word());
                             info.put("tag", word.tag());
-                            sentence.put(info);
+                            words.put(info);
                         }
+                        sentence.put("words", words);
                         sentences.put(sentence);
                     }
                     chunk.put("sentences", sentences);
