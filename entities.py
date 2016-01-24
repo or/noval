@@ -1,10 +1,8 @@
 import json
 from collections import defaultdict
 
-ENTITIES_FILENAME = 'entities.json'
 
-
-def set2list(entities, path):
+def _set2list(entities, path):
     obj = entities
     for chunk in path[:-1]:
         obj = entities[chunk]
@@ -18,7 +16,7 @@ def set2list(entities, path):
         obj[last] = list(sorted(obj.get(last, set())))
 
 
-def list2set(entities, path):
+def _list2set(entities, path):
     obj = entities
     for chunk in path[:-1]:
         obj = entities[chunk]
@@ -32,166 +30,165 @@ def list2set(entities, path):
         obj[last] = set(obj.get(last, []))
 
 
-def use_sets(entities):
-    for path in (['gender', '*'],
-                 ['title', '*'],
-                 ['person', '*'],
-                 ['organization', '*'],
-                 ['place', '*'],
-                 ['ignore'],
-                 ['unknown']):
-        list2set(entities, path)
+class EntityDatabase(object):
+    SET_PATHS = (
+        ['gender', '*'],
+        ['title', '*'],
+        ['person', '*'],
+        ['organization', '*'],
+        ['place', '*'],
+        ['ignore'],
+        ['unknown'],
+    )
 
+    def __init__(self):
+        self.entities = self._get_empty_entities()
+        self.known = self.get_all_known_entities()
 
-def use_lists(entities):
-    for path in (['gender', '*'],
-                 ['title', '*'],
-                 ['person', '*'],
-                 ['organization', '*'],
-                 ['place', '*'],
-                 ['ignore'],
-                 ['unknown']):
-        set2list(entities, path)
+    @classmethod
+    def _get_empty_entities(cls):
+        return {
+            'person': {},
+            'organization': {},
+            'place': {},
+            'unknown': set(),
+            'title': {
+                'person': [],
+                'organization': [],
+                'place': [],
+            },
+            'gender': {
+                'male': set(),
+                'female': set(),
+                'neuter': set(),
+            },
+            'ignore': set(),
+        }
 
+    def _ensure_sets(self):
+        for path in EntityDatabase.SET_PATHS:
+            _list2set(self.entities, path)
 
-def empty_entities():
-    return {
-        'person': {},
-        'organization': {},
-        'place': {},
-        'unknown': set(),
-        'title': {
-            'person': [],
-            'organization': [],
-            'place': [],
-        },
-        'gender': {
-            'male': set(),
-            'female': set(),
-            'neuter': set(),
-        },
-        'ignore': set(),
-    }
+    def _ensure_lists(self):
+        for path in EntityDatabase.SET_PATHS:
+            _set2list(self.entities, path)
 
+    def load(self, filename):
+        self.entities = EntityDatabase._get_empty_entities()
+        read_entities = json.load(open(filename))
+        self.entities.update(read_entities)
+        self._ensure_sets()
 
-def load_entities():
-    entities = empty_entities()
-    read_entities = json.load(open(ENTITIES_FILENAME))
-    use_sets(read_entities)
-    entities.update(read_entities)
-    return entities
+        self.known = self.get_all_known_entities()
 
+    def save(self, filename):
+        self._ensure_lists()
+        json.dump(self.entities, open(filename, 'w'), indent=4)
+        self._ensure_sets()
 
-def store_entities(entities):
-    use_lists(entities)
-    json.dump(entities, open('generated.' + ENTITIES_FILENAME, 'w'), indent=4)
-    use_sets(entities)
+    def get_all_known_entities(self):
+        known = set()
+        for kind in ('person', 'organization', 'place'):
+            for word in self.entities['title'][kind]:
+                known.add(word)
 
+            for word in self.entities[kind]:
+                known.add(word)
+                for w in self.entities[kind][word]:
+                    known.add(w)
 
-def get_all_known_entities(entities):
-    known = set()
-    for kind in ('person', 'organization', 'place'):
-        for word in entities[kind]:
+        for word in self.entities['ignore']:
             known.add(word)
-            for w in entities[kind][word]:
-                known.add(w)
 
-    for word in entities['ignore']:
-        known.add(word)
+        return known
 
-    return known
+    def compact(self):
+        """
+        Remove unknown single words that occur in already known entities.
+        These will be first names, last names, parts of the place name and so on.
+        """
+        single_words = defaultdict(list)
+        full = set()
 
-
-def compact_entities(entities):
-    """
-    Remove unknown single words that occur in already known entities.
-    These will be first names, last names, parts of the place name and so on.
-    """
-    single_words = defaultdict(list)
-    full = set()
-
-    for kind in ('person', 'organization', 'place'):
-        for entity in entities[kind]:
-            full.add(entity)
-            for word in entity.split():
-                single_words[word].append([kind, entity])
-
-            for alias in entities[kind][entity]:
-                full.add(alias)
-                for word in alias.split():
+        for kind in ('person', 'organization', 'place'):
+            for entity in self.entities[kind]:
+                full.add(entity)
+                for word in entity.split():
                     single_words[word].append([kind, entity])
 
-    # using a copied list here, allows mutating the set inside the loop
-    for x in list(entities['unknown']):
-        if x in single_words or x in full:
-            entities['unknown'].remove(x)
-            for path in single_words[x]:
-                entities[path[0]][path[1]].add(x)
+                for alias in self.entities[kind][entity]:
+                    full.add(alias)
+                    for word in alias.split():
+                        single_words[word].append([kind, entity])
 
-        elif x.endswith('s'):
-            singular = x[:-1]
-            if singular in single_words:
-                entities['unknown'].remove(x)
-                for path in single_words[singular]:
-                    if path[0] == 'organization':
-                        entities[path[0]][path[1]].add(x)
+        # using a copied list here, allows mutating the set inside the loop
+        for x in list(self.entities['unknown']):
+            if x in single_words or x in full:
+                self.entities['unknown'].remove(x)
+                for path in single_words[x]:
+                    self.entities[path[0]][path[1]].add(x)
 
-    for word in single_words:
-        for path in single_words[word]:
-            entities[path[0]][path[1]].add(word)
+            elif x.endswith('s'):
+                singular = x[:-1]
+                if singular in single_words:
+                    self.entities['unknown'].remove(x)
+                    for path in single_words[singular]:
+                        if path[0] == 'organization':
+                            self.entities[path[0]][path[1]].add(x)
 
+        for word in single_words:
+            for path in single_words[word]:
+                self.entities[path[0]][path[1]].add(word)
 
-def enumerate_entities(tagged_words, entities):
-    def assemble(words):
-        return ' '.join(x['word'] for x in words)
+        self.known = self.get_all_known_entities()
 
-    last_words = []
-    for word in tagged_words:
-        if word['tag'] != 'NNP' or word['word'] in entities['ignore']:
-            if last_words:
-                entity = assemble(last_words)
-                if entity not in entities['ignore']:
-                    yield entity
+    def enumerate_entities(self, tagged_words):
+        def assemble(words):
+            return ' '.join(x['word'] for x in words)
 
-                last_words = []
+        last_words = []
+        for word in tagged_words:
+            if word['tag'] != 'NNP' or word['word'] in self.entities['ignore']:
+                if last_words:
+                    entity = assemble(last_words)
+                    if entity not in self.entities['ignore']:
+                        yield entity
 
-            continue
+                    last_words = []
 
-        last_words.append(word)
-
-    if last_words:
-        yield assemble(last_words)
-
-
-def add_entity(entities, known, entity):
-    if not entity:
-        return
-
-    if entity in known:
-        return
-
-    for kind in ('person', 'organization'):
-        for title in entities['title'][kind]:
-            if entity == title:
-                return
-
-            if not entity.startswith(title + ' '):
                 continue
 
-            raw_entity = entity[len(title) + 1:]
-            aliases = entities[kind].get(raw_entity, set())
-            if raw_entity != entity:
-                aliases.add(entity)
+            last_words.append(word)
 
-            aliases.add(title)
-            entities[kind][raw_entity] = aliases
+        if last_words:
+            yield assemble(last_words)
 
+    def add(self, entity):
+        if not entity:
             return
 
-    entities['unknown'].add(entity)
+        for kind in ('person', 'organization'):
+            for title in self.entities['title'][kind]:
+                if entity == title:
+                    return
 
+                if not entity.startswith(title + ' '):
+                    continue
 
-def get_entities_stats(entities):
-    stats = {'num_' + k: len(v) for k, v in entities.items()}
+                raw_entity = entity[len(title) + 1:]
+                aliases = self.entities[kind].get(raw_entity, set())
+                if raw_entity != entity:
+                    aliases.add(entity)
 
-    return stats
+                aliases.add(title)
+                self.entities[kind][raw_entity] = aliases
+
+                return
+
+        self.entities['unknown'].add(entity)
+        self.known.add(entity)
+
+    def get_stats(self):
+        stats = {'num_' + k: len(v) for k, v in self.entities.items()}
+
+        return stats
