@@ -110,11 +110,15 @@ class EntityDatabase(object):
             s = ' '.join(x['word'] for x in words)
             return s.replace(" 's", "'s")
 
-        def represent(tagged_word):
+        def represent(tagged_word, is_first_in_sentence=False):
             tag = tagged_word['tag']
             word = tagged_word['word']
 
-            if word in self.entities['force']:
+            if not is_first_in_sentence and word != "I" and \
+               word[0].isalpha() and word[0].upper() == word[0]:
+                return 'P'
+
+            elif word in self.entities['force']:
                 return 'P'
 
             elif word in self.entities['ignore'] or word.lower() in self.entities['ignore']:
@@ -143,7 +147,7 @@ class EntityDatabase(object):
 
             return 'x'
 
-        tag_string = ''.join(represent(x) for x in tagged_words)
+        tag_string = ''.join(represent(x, i == 0) for i, x in enumerate(tagged_words))
         for mo in ENTITY.finditer(tag_string):
             entity = assemble(tagged_words[mo.start():mo.end()])
             yield entity
@@ -158,6 +162,7 @@ class EntityDatabase(object):
         if entity in self.reverse_map:
             return
 
+        entities_without_title = set([entity])
         added = False
         for kind in ('person', 'organization', 'place'):
             for title in self.entities['title'][kind]:
@@ -174,30 +179,65 @@ class EntityDatabase(object):
                     # uppercase letter after the title
                     continue
 
-                if real_entity not in self.entities[kind]:
-                    self.entities[kind][real_entity] = set()
+                entities_without_title.add(real_entity)
 
-                self.entities[kind][real_entity].add(title)
-                if real_entity != entity:
-                    self.entities[kind][real_entity].add(entity)
+        real_entity = list(sorted(entities_without_title, key=lambda x: len(x)))[0]
+        real_title = entity[:-len(real_entity)].strip()
+        real_kind = None
+        real_gender = None
+        if real_title:
+            for kind in ('person', 'organization', 'place'):
+                if real_title in self.entities['title'][kind]:
+                    real_kind = kind
+                    break
 
-                self.reverse_map[entity].add(tuple(['title', kind, real_entity]))
-                self.reverse_map[real_entity].add(tuple(['title', kind, real_entity]))
-                added = True
+            for gender, titles in self.entities['gender'].items():
+                if real_title in titles:
+                    real_gender = gender
+                    break
 
         for kind in ('person', 'organization', 'place'):
             for known_entity in self.entities[kind]:
+                if real_kind and kind != real_kind:
+                    continue
+
                 if entity == known_entity:
                     continue
 
                 if not (entity.startswith(known_entity + ' ') or
-                        entity in known_entity.split()):
+                        real_entity in known_entity.split()):
                     continue
+
+                if real_title:
+                    known_genders = set()
+                    for alias in self.entities[kind][known_entity]:
+                        for gender, titles in self.entities['gender'].items():
+                            if alias in titles:
+                                known_genders.add(gender)
+
+                    if known_genders and real_gender not in known_genders:
+                        continue
 
                 self.entities[kind][known_entity].add(entity)
 
-                self.reverse_map[entity].add(tuple(['title', kind, known_entity]))
+                self.reverse_map[entity].add(tuple([kind, known_entity]))
+                if real_title:
+                    self.reverse_map[real_title].add(tuple([kind, known_entity]))
+
                 added = True
+
+        if not added and real_kind:
+            self.entities[real_kind][real_entity] = set()
+
+            self.entities[real_kind][real_entity].add(real_title)
+            self.reverse_map[real_entity].add(tuple([real_kind, real_entity]))
+            self.reverse_map[real_title].add(tuple([real_kind, real_entity]))
+
+            if real_entity != entity:
+                self.entities[real_kind][real_entity].add(entity)
+                self.reverse_map[entity].add(tuple([real_kind, real_entity]))
+
+            added = True
 
         if not added:
             self.entities['unknown'].add(entity)
