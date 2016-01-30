@@ -211,3 +211,17 @@ class EntityDatabase(object):
                 self.entities[kind][key] = set()
 
         self.build_reverse_map()
+
+    def look_up(self, entity):
+        if entity not in self.reverse_map:
+            return None
+
+        if entity in self.entities['ignore']:
+            return None
+
+        paths = self.reverse_map[entity]
+        result = defaultdict(set)
+        for path in paths:
+            result[path[0]].add(entity)
+
+        return dict(result)
