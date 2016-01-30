@@ -11,7 +11,7 @@ from structure import ParagraphChunk
 CHAPTER = re.compile(r'^[A-Z ]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
-INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted)\W.*')
+INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted|observed)\W.*')
 QUOTED_TEXT = re.compile(r'^[A-Za-z0-9 ]+$')
 
 RUN_ON_DIRECT = "<run-on-direct>"
