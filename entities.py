@@ -42,6 +42,7 @@ class EntityDatabase(object):
         ['place', '*'],
         ['ignore'],
         ['unknown'],
+        ['force'],
     )
 
     def __init__(self):
@@ -66,6 +67,7 @@ class EntityDatabase(object):
                 'neuter': set(),
             },
             'ignore': set(),
+            'force': set(),
         }
 
     def _ensure_sets(self):
@@ -112,7 +114,10 @@ class EntityDatabase(object):
             tag = tagged_word['tag']
             word = tagged_word['word']
 
-            if word in self.entities['ignore'] or word.lower() in self.entities['ignore']:
+            if word in self.entities['force']:
+                return 'P'
+
+            elif word in self.entities['ignore'] or word.lower() in self.entities['ignore']:
                 return 'x'
 
             elif tag in ('NNP', 'NNPS'):
