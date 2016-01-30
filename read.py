@@ -6,15 +6,14 @@ import argparse
 import json
 import re
 
+from structure import ParagraphChunk
+
 CHAPTER = re.compile(r'^[A-Z ]+$')
 QUOTES = re.compile(r'(?:")')
 UNFINISHED = re.compile(r'.*([^".?!]|-)$')
 INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted)\W.*')
 QUOTED_TEXT = re.compile(r'^[A-Za-z0-9 ]+$')
 
-INDIRECT = 'indirect'
-DIRECT = 'direct'
-INQUIT = 'inquit'
 RUN_ON_DIRECT = "<run-on-direct>"
 
 
@@ -122,11 +121,13 @@ def read(input_filename, output):
         flag = None
         last_chunk = ''
         for chunk in split_direct_indirect(p):
-            flag = DIRECT if flag == INDIRECT else INDIRECT
+            flag = (ParagraphChunk.DIRECT
+                    if flag == ParagraphChunk.INDIRECT
+                    else ParagraphChunk.INDIRECT)
 
             chunk = chunk.strip()
 
-            if flag == INDIRECT and looks_like_inquit(chunk, last_chunk):
+            if flag == ParagraphChunk.INDIRECT and looks_like_inquit(chunk, last_chunk):
                 paragraph.append(dict(type='inquit', data=chunk))
             else:
                 paragraph.append(dict(type=flag, data=chunk))
@@ -138,9 +139,9 @@ def read(input_filename, output):
         last_paragraph = chapter['paragraphs'][-1] if chapter['paragraphs'] else None
         if (last_paragraph and
            len(last_paragraph) > 1 and
-           last_paragraph[-2]['type'] == DIRECT and
+           last_paragraph[-2]['type'] == ParagraphChunk.DIRECT and
            last_paragraph[-1]['data'] == RUN_ON_DIRECT and
-           paragraph[0]['type'] == DIRECT):
+           paragraph[0]['type'] == ParagraphChunk.DIRECT):
             last_paragraph.pop(-1)
             last_paragraph[-1]['data'] += " " + paragraph[0]['data']
             last_paragraph += paragraph[1:]

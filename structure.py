@@ -3,108 +3,287 @@ import json
 from progressbar import ETA, Bar, Percentage, ProgressBar
 
 
-class Entity(object):
-    def __init__(self, name):
-        self.name = name
-        self.aliases = set([name])
+class NovelPart(object):
+    def __init__(self, data=None, parent=None):
+        self.data = data or {}
+        self.entities = {
+            'person': {},
+            'organization': {},
+            'place': {},
+            'title': {},
+        }
+        self.children = []
+        self.parent = parent
+        if parent:
+            parent.add_child(self)
 
-    def __unicode__(self):
-        return '%s:%s' % (self.__class__.__name__, self.name)
+    def add_entities(self, entities):
+        for kind, values in entities.items():
+            for e in values:
+                n = values[e] if isinstance(values, dict) else 1
+                self.entities[kind][e] = self.entities[kind].get(e, 0) + n
 
-    def __lt__(self, o):
-        if self.__class__ != o.__class__:
-            return self.__class__ < o.__class__
+    def get_entities(self):
+        return self.entities
 
-        return self.name < o.name
+    def collect_entities(self):
+        for child in self.get_children():
+            self.add_entities(child.get_entities())
 
-    def __eq__(self, o):
-        return self.__class__ == o.__class__ and self.name == o.name
+    def add_child(self, child):
+        self.children.append(child)
 
+    def get_children(self):
+        return self.children
 
-class Character(Entity):
-    def __init__(self, name):
-        super(Character, self).__init__(name)
+    def prepare_save(self):
+        if isinstance(self.data, dict):
+            # self.data['entities'] = {k: list(sorted(v)) for k, v in self.entities.items()}
+            self.data['entities'] = self.entities
 
-
-class Organization(Entity):
-    def __init__(self, name):
-        super(Organization, self).__init__(name)
-
-
-class Place(Entity):
-    def __init__(self, name):
-        super(Place, self).__init__(name)
-
-
-class Scene(object):
-    """
-    The current scene while analysing the novel.
-    It contains information like the place and the characters involved in the scene.
-
-    """
-
-    def __init__(self):
-        self.characters = set()
-        self.last_speakers = []
-
-    def add_speaker(self, speaker):
-        if self.get_speaker(-1) != speaker:
-            self.last_speakers.append(speaker)
-
-    def get_speaker(self, index):
-        try:
-            return self.last_speakers[index]
-        except IndexError:
-            return None
+        for child in self.get_children():
+            child.prepare_save()
 
 
-class Novel(object):
+class Novel(NovelPart):
     def __init__(self, filename=None):
+        super(Novel, self).__init__()
         if filename:
             self.data = json.load(open(filename))
         else:
             self.data = {}
 
-    def for_each_sentence(self, function):
-        chapters = self.data['chapters']
-        total_number_paragraphs = \
-            sum([len(chunk['sentences'])
-                 for c in chapters
-                 for p in c['paragraphs'] for chunk in p])
+        self.parse_structure()
 
-        widgets = [Percentage(), Bar(), ETA()]
-        pbar = ProgressBar(widgets=widgets, maxval=total_number_paragraphs).start()
-        num_sentences = 0
+    def parse_structure(self):
+        self.children = []
+        self.total_number_sentences = 0
+        chapters = self.data['chapters']
         for chapter in chapters:
+            c = Chapter(chapter, novel=self)
             for paragraph in chapter['paragraphs']:
+                p = Paragraph(paragraph, chapter=c)
                 for chunk in paragraph:
+                    ch = ParagraphChunk(chunk, paragraph=p)
                     for sentence in chunk['sentences']:
+                        Sentence(sentence, chunk=ch)
+                        self.total_number_sentences += 1
+
+    def for_each_sentence(self, function):
+        widgets = [Percentage(), Bar(), ETA()]
+        pbar = ProgressBar(widgets=widgets, maxval=self.total_number_sentences).start()
+        num_sentences = 0
+        for chapter in self.get_children():
+            for paragraph in chapter.get_children():
+                for chunk in paragraph.get_children():
+                    for sentence in chunk.get_children():
                         pbar.update(num_sentences)
                         num_sentences += 1
-
-                        function(Sentence(sentence))
+                        function(sentence)
 
         pbar.finish()
 
-
-class Chapter(object):
-    def __init__(self, data=None):
-        self.data = data or {}
-
-
-class Paragraph(object):
-    def __init__(self, data=None):
-        self.data = data or {}
+    def save(self, filename):
+        self.prepare_save()
+        json.dump(self.data, open(filename, 'w'), indent=4)
 
 
-class ParagraphChunk(object):
-    def __init__(self, data=None):
-        self.data = data or {}
+class Chapter(NovelPart):
+    def __init__(self, data=None, novel=None):
+        super(Chapter, self).__init__(data=data, parent=novel)
+        self.novel = novel
 
 
-class Sentence(object):
-    def __init__(self, data=None):
-        self.data = data or {}
+class Paragraph(NovelPart):
+    def __init__(self, data=None, chapter=None):
+        super(Paragraph, self).__init__(data=data, parent=chapter)
+        self.chapter = chapter
+
+
+class ParagraphChunk(NovelPart):
+    INDIRECT = 'indirect'
+    DIRECT = 'direct'
+    INQUIT = 'inquit'
+
+    def __init__(self, data=None, paragraph=None):
+        super(ParagraphChunk, self).__init__(data=data, parent=paragraph)
+        self.paragraph = paragraph
+        self.speaker = None
+        self.potential_speakers = []
+
+    def get_type(self):
+        return self.data['type']
+
+    def is_direct(self):
+        return self.get_type() == ParagraphChunk.DIRECT
+
+    def is_indirect(self):
+        return self.get_type() == ParagraphChunk.INDIRECT
+
+    def is_inquit(self):
+        return self.get_type() == ParagraphChunk.INQUIT
+
+    def prepare_save(self):
+        super(ParagraphChunk, self).prepare_save()
+        self.data['speaker'] = self.speaker
+
+
+class Sentence(NovelPart):
+    def __init__(self, data=None, chunk=None):
+        super(Sentence, self).__init__(data=data, parent=chunk)
+        self.chunk = chunk
 
     def get_words(self):
         return self.data['words']
+
+
+class Context(object):
+    def __init__(self):
+        self.last_chapter = None
+        self.current_chapter = None
+
+        self.last_paragraph = None
+        self.current_paragraph = None
+
+        self.last_chunk = None
+        self.current_chunk = None
+
+        self.speaker_history = []
+        self.present_entities = set()
+
+        self.current_speaker = None
+
+    def set_current_speaker(self, speaker):
+        self.current_chunk.speaker = speaker
+        self.current_speaker = speaker
+        if not self.speaker_history or self.speaker_history[-1] != speaker:
+            self.speaker_history.append(speaker)
+
+    def change_last_speaker(self, speaker):
+        if not self.last_chunk:
+            return
+
+        if self.last_chunk.speaker == speaker:
+            return
+
+        self.last_chunk.speaker = speaker
+
+        if self.speaker_history[-1] == self.last_chunk.speaker:
+            self.speaker_history[-1] = speaker
+
+    def set_chapter(self, chapter):
+        if chapter == self.current_chapter:
+            return
+
+        self.last_chapter = self.current_chapter
+        self.current_chapter = chapter
+
+        self.present_entities = set()
+        self.speaker_history = []
+
+        self.current_paragraph = None
+        self.set_paragraph(None)
+
+        self.current_speaker = None
+
+    def set_paragraph(self, paragraph):
+        if paragraph and paragraph == self.current_paragraph:
+            return
+
+        if paragraph:
+            self.set_chapter(paragraph.chapter)
+
+        self.last_chapter = self.current_paragraph
+        self.current_paragraph = paragraph
+
+        self.current_chunk = None
+        self.set_chunk(None)
+
+        self.current_speaker = None
+
+    def set_chunk(self, chunk):
+        if chunk and chunk == self.current_chunk:
+            return
+
+        if chunk:
+            self.set_paragraph(chunk.paragraph)
+
+        self.last_chunk = self.current_chunk
+        self.current_chunk = chunk
+
+        if self.is_direct():
+            if self.current_speaker:
+                self.current_chunk.speaker = self.current_speaker
+
+            elif self.last_chunk and self.last_chunk.potential_speakers:
+                self.set_current_speaker(self.last_chunk.potential_speakers[0])
+
+            elif len(self.speaker_history) > 1:
+                self.set_current_speaker(self.speaker_history[-2])
+
+    def is_direct(self):
+        if self.current_chunk and self.current_chunk.is_direct():
+            return True
+
+        return False
+
+    def is_indirect(self):
+        if self.current_chunk and self.current_chunk.is_indirect():
+            return True
+
+        return False
+
+    def is_inquit(self):
+        if self.current_chunk and self.current_chunk.is_inquit():
+            return True
+
+        return False
+
+    def was_direct(self):
+        if self.last_chunk and self.last_chunk.is_direct():
+            return True
+
+        return False
+
+    def was_indirect(self):
+        if self.last_chunk and self.last_chunk.is_indirect():
+            return True
+
+        return False
+
+    def was_inquit(self):
+        if self.last_chunk and self.last_chunk.is_inquit():
+            return True
+
+        return False
+
+    def process_sentence(self, sentence, edb):
+        self.set_chunk(sentence.chunk)
+
+        for entity in edb.enumerate_entities(sentence.get_words()):
+            entities = edb.look_up(entity)
+            if not entities:
+                continue
+
+            sentence.add_entities(entities)
+
+            if not self.is_direct():
+                if 'person' in entities:
+                    self.current_chunk.potential_speakers.append(entity)
+
+            if self.is_inquit() and not self.current_speaker:
+                if 'person' in entities:
+                    self.current_speaker = entity
+                    if self.was_direct():
+                        self.change_last_speaker(entity)
+
+                    self.last_sentence = sentence
+
+            elif self.is_indirect():
+                if 'person' in entities:
+                    self.last_mentioned_person = entity
+
+        if (self.is_inquit() and
+           not self.current_chunk.speaker and
+           self.last_chunk and self.last_chunk.speaker):
+            self.current_chunk.speaker = self.last_chunk.speaker
