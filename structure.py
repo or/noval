@@ -92,6 +92,14 @@ class Chapter(NovelPart):
     def __init__(self, data=None, novel=None):
         super(Chapter, self).__init__(data=data, parent=novel)
         self.novel = novel
+        self.speakers = []
+
+    def set_speakers(self, speakers):
+        self.speakers = speakers
+
+    def prepare_save(self):
+        super(Chapter, self).prepare_save()
+        self.data['speakers'] = self.speakers
 
 
 class Paragraph(NovelPart):
@@ -148,8 +156,10 @@ class Context(object):
         self.last_chunk = None
         self.current_chunk = None
 
+        self.first_person_in_chunk = None
+        self.first_sentence_in_chunk = None
+
         self.speaker_history = []
-        self.present_entities = set()
 
         self.current_speaker = None
 
@@ -168,8 +178,10 @@ class Context(object):
 
         self.last_chunk.speaker = speaker
 
-        if self.speaker_history[-1] == self.last_chunk.speaker:
+        if self.speaker_history and self.speaker_history[-1] == self.last_chunk.speaker:
             self.speaker_history[-1] = speaker
+        else:
+            self.speaker_history.append(speaker)
 
     def set_chapter(self, chapter):
         if chapter == self.current_chapter:
@@ -178,7 +190,9 @@ class Context(object):
         self.last_chapter = self.current_chapter
         self.current_chapter = chapter
 
-        self.present_entities = set()
+        if self.last_chapter:
+            self.last_chapter.set_speakers(self.speaker_history)
+
         self.speaker_history = []
 
         self.current_paragraph = None
@@ -193,7 +207,7 @@ class Context(object):
         if paragraph:
             self.set_chapter(paragraph.chapter)
 
-        self.last_chapter = self.current_paragraph
+        self.last_paragraph = self.current_paragraph
         self.current_paragraph = paragraph
 
         self.current_chunk = None
@@ -211,9 +225,12 @@ class Context(object):
         self.last_chunk = self.current_chunk
         self.current_chunk = chunk
 
+        self.first_person_in_chunk = None
+        self.first_sentence_in_chunk = None
+
         if self.is_direct():
             if self.current_speaker:
-                self.current_chunk.speaker = self.current_speaker
+                self.set_current_speaker(self.current_speaker)
 
             elif self.last_chunk and self.last_chunk.potential_speakers:
                 self.set_current_speaker(self.last_chunk.potential_speakers[0])
@@ -260,6 +277,9 @@ class Context(object):
     def process_sentence(self, sentence, edb):
         self.set_chunk(sentence.chunk)
 
+        if not self.first_sentence_in_chunk:
+            self.first_sentence_in_chunk = sentence
+
         for entity in edb.enumerate_entities(sentence.get_words()):
             entities = edb.look_up(entity)
             if not entities:
@@ -271,8 +291,9 @@ class Context(object):
                 if 'person' in entities:
                     self.current_chunk.potential_speakers.append(entity)
 
-            if self.is_inquit() and not self.current_speaker:
-                if 'person' in entities:
+            if self.is_inquit() and sentence == self.first_sentence_in_chunk:
+                if 'person' in entities and not self.first_person_in_chunk:
+                    self.first_person_in_chunk = entity
                     self.current_speaker = entity
                     if self.was_direct():
                         self.change_last_speaker(entity)
@@ -282,8 +303,3 @@ class Context(object):
             elif self.is_indirect():
                 if 'person' in entities:
                     self.last_mentioned_person = entity
-
-        if (self.is_inquit() and
-           not self.current_chunk.speaker and
-           self.last_chunk and self.last_chunk.speaker):
-            self.current_chunk.speaker = self.last_chunk.speaker
