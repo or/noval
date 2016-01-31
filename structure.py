@@ -69,17 +69,27 @@ class Novel(NovelPart):
                         Sentence(sentence, chunk=ch)
                         self.total_number_sentences += 1
 
-    def for_each_sentence(self, function):
+    def for_each(self, chapter=None, paragraph=None, chunk=None, sentence=None):
         widgets = [Percentage(), Bar(), ETA()]
         pbar = ProgressBar(widgets=widgets, maxval=self.total_number_sentences).start()
         num_sentences = 0
-        for chapter in self.get_children():
-            for paragraph in chapter.get_children():
-                for chunk in paragraph.get_children():
-                    for sentence in chunk.get_children():
+        for c in self.get_children():
+            if chapter:
+                chapter(c)
+
+            for p in c.get_children():
+                if paragraph:
+                    paragraph(p)
+
+                for ch in p.get_children():
+                    if chunk:
+                        chunk(ch)
+
+                    for s in ch.get_children():
                         pbar.update(num_sentences)
                         num_sentences += 1
-                        function(sentence)
+                        if sentence:
+                            sentence(s)
 
         pbar.finish()
 

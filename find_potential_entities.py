@@ -21,7 +21,7 @@ def process(novel):
         for entity in entities.enumerate_entities(sentence.get_words()):
             entities.add(entity)
 
-    novel.for_each_sentence(process_sentence)
+    novel.for_each(sentence=process_sentence)
 
     entities.save("generated." + ENTITIES_FILENAME)
 

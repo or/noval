@@ -20,7 +20,7 @@ def process(novel):
     def process_sentence(sentence):
         context.process_sentence(sentence, edb)
 
-    novel.for_each_sentence(process_sentence)
+    novel.for_each(sentence=process_sentence)
 
 
 if __name__ == '__main__':
