@@ -126,11 +126,15 @@ class ParagraphChunk(NovelPart):
     def __init__(self, data=None, paragraph=None):
         super(ParagraphChunk, self).__init__(data=data, parent=paragraph)
         self.paragraph = paragraph
-        self.speaker = None
+        self.speaker = data.get('speaker', None)
+        self.speaker_rule = data.get('speaker_rule', None)
         self.potential_speakers = []
 
     def get_type(self):
         return self.data['type']
+
+    def get_data(self):
+        return self.data['data']
 
     def is_direct(self):
         return self.get_type() == ParagraphChunk.DIRECT
@@ -144,12 +148,14 @@ class ParagraphChunk(NovelPart):
     def prepare_save(self):
         super(ParagraphChunk, self).prepare_save()
         self.data['speaker'] = self.speaker
+        self.data['speaker_rule'] = self.speaker_rule
 
 
 class Sentence(NovelPart):
     def __init__(self, data=None, chunk=None):
         super(Sentence, self).__init__(data=data, parent=chunk)
         self.chunk = chunk
+        self.potential_speakers = []
 
     def get_words(self):
         return self.data['words']
@@ -173,8 +179,9 @@ class Context(object):
 
         self.current_speaker = None
 
-    def set_current_speaker(self, speaker):
+    def set_current_speaker(self, speaker, rule):
         self.current_chunk.speaker = speaker
+        self.current_chunk.speaker_rule = rule
         self.current_speaker = speaker
         if not self.speaker_history or self.speaker_history[-1] != speaker:
             self.speaker_history.append(speaker)
@@ -225,6 +232,25 @@ class Context(object):
 
         self.current_speaker = None
 
+    def find_most_likely_speaker(self, chunk):
+        first_per_chunk = []
+
+        for child in chunk.paragraph.children:
+            if child == chunk:
+                break
+
+            if child.is_direct():
+                first_per_chunk = []
+            else:
+                for sentence in child.children:
+                    if sentence.potential_speakers:
+                        first_per_chunk.append(sentence.potential_speakers[0])
+
+        if first_per_chunk:
+            return first_per_chunk[-1]
+
+        return None
+
     def set_chunk(self, chunk):
         if chunk and chunk == self.current_chunk:
             return
@@ -239,14 +265,27 @@ class Context(object):
         self.first_sentence_in_chunk = None
 
         if self.is_direct():
-            if self.current_speaker:
-                self.set_current_speaker(self.current_speaker)
+            first_chunk = chunk.paragraph.children[0]
+            most_likely_speaker = self.find_most_likely_speaker(chunk)
 
-            elif self.last_chunk and self.last_chunk.potential_speakers:
-                self.set_current_speaker(self.last_chunk.potential_speakers[0])
+            if self.current_speaker:
+                self.set_current_speaker(self.current_speaker, rule="kept")
+
+            elif most_likely_speaker:
+                self.set_current_speaker(most_likely_speaker, rule="most_likely")
+
+            # if the paragraph starts with an indirect chunk but
+            # since then we've found no likely speaker, then
+            # assume the speaker hasn't changed
+            elif (chunk != first_chunk and first_chunk.is_indirect and
+                  self.speaker_history):
+                self.set_current_speaker(self.speaker_history[-1], "last_known")
+
+            # TODO need a rule to change the speaker if a new speaker was
+            # *addressed* in the last direct chunk
 
             elif len(self.speaker_history) > 1:
-                self.set_current_speaker(self.speaker_history[-2])
+                self.set_current_speaker(self.speaker_history[-2], "dialogue")
 
     def is_direct(self):
         if self.current_chunk and self.current_chunk.is_direct():
@@ -300,6 +339,7 @@ class Context(object):
             if not self.is_direct():
                 if 'person' in entities:
                     self.current_chunk.potential_speakers.append(entity)
+                    sentence.potential_speakers.append(entity)
 
             if self.is_inquit() and sentence == self.first_sentence_in_chunk:
                 if 'person' in entities and not self.first_person_in_chunk:
@@ -308,8 +348,4 @@ class Context(object):
                     if self.was_direct():
                         self.change_last_speaker(entity)
 
-                    self.last_sentence = sentence
-
-            elif self.is_indirect():
-                if 'person' in entities:
-                    self.last_mentioned_person = entity
+            self.last_sentence = sentence
