@@ -3,32 +3,32 @@ import json
 from progressbar import ETA, Bar, Percentage, ProgressBar
 
 
+def _uniq(seq):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
 class NovelPart(object):
     def __init__(self, data=None, parent=None):
         self.data = data or {}
-        self.entities = {
-            'person': {},
-            'organization': {},
-            'place': {},
-            'title': {},
-        }
+        if isinstance(self.data, dict):
+            self.entities = self.data.get('entities', [])
+        else:
+            self.entities = []
+
         self.children = []
         self.parent = parent
         if parent:
             parent.add_child(self)
 
-    def add_entities(self, entities):
-        for kind, values in entities.items():
-            for e in values:
-                n = values[e] if isinstance(values, dict) else 1
-                self.entities[kind][e] = self.entities[kind].get(e, 0) + n
+    def add_entity(self, entity):
+        self.entities.append(entity)
+        if self.parent:
+            self.parent.add_entity(entity)
 
     def get_entities(self):
         return self.entities
-
-    def collect_entities(self):
-        for child in self.get_children():
-            self.add_entities(child.get_entities())
 
     def add_child(self, child):
         self.children.append(child)
@@ -38,7 +38,6 @@ class NovelPart(object):
 
     def prepare_save(self):
         if isinstance(self.data, dict):
-            # self.data['entities'] = {k: list(sorted(v)) for k, v in self.entities.items()}
             self.data['entities'] = self.entities
 
         for child in self.get_children():
@@ -69,7 +68,7 @@ class Novel(NovelPart):
                         Sentence(sentence, chunk=ch)
                         self.total_number_sentences += 1
 
-    def for_each(self, chapter=None, paragraph=None, chunk=None, sentence=None):
+    def for_each(self, chapter=None, chapter_done=None, paragraph=None, chunk=None, sentence=None):
         widgets = [Percentage(), Bar(), ETA()]
         pbar = ProgressBar(widgets=widgets, maxval=self.total_number_sentences).start()
         num_sentences = 0
@@ -91,6 +90,9 @@ class Novel(NovelPart):
                         if sentence:
                             sentence(s)
 
+            if chapter_done:
+                chapter_done(c)
+
         pbar.finish()
 
     def save(self, filename):
@@ -102,7 +104,7 @@ class Chapter(NovelPart):
     def __init__(self, data=None, novel=None):
         super(Chapter, self).__init__(data=data, parent=novel)
         self.novel = novel
-        self.speakers = []
+        self.speakers = self.data.get('speakers', [])
 
     def set_speakers(self, speakers):
         self.speakers = speakers
@@ -110,6 +112,55 @@ class Chapter(NovelPart):
     def prepare_save(self):
         super(Chapter, self).prepare_save()
         self.data['speakers'] = self.speakers
+
+    @staticmethod
+    def _build_entity_map(entities, edb, fallback=None):
+        normalized_entities = set()
+        entity_map = {}
+        undecided = {}
+        for name in entities:
+            if name in entity_map:
+                continue
+
+            result = edb.look_up(name, normalize=True)
+            if 'person' not in result:
+                continue
+
+            persons = result['person']
+            candidates = list(persons)
+            likely_matches = normalized_entities & persons
+            if likely_matches:
+                candidates = list(likely_matches)
+
+            person = edb.decide(name, candidates)
+            if not person:
+                if fallback and name in fallback:
+                    person = fallback[name]
+
+                else:
+                    undecided[name] = candidates
+                    continue
+
+            normalized_entities.add(person)
+            entity_map[name] = person
+
+        return entity_map, undecided
+
+    def identify_speakers(self, edb):
+        all_entity_map, all_undecided = self._build_entity_map(self.entities, edb)
+        speaker_entity_map, speaker_undecided = \
+            self._build_entity_map(self.speakers, edb, fallback=all_entity_map)
+
+        for name in speaker_undecided:
+            candidates = speaker_undecided[name]
+            print("\n")
+            print("warning: {} couldn't be decided: {}".format(name, candidates))
+
+        self.speakers = _uniq([speaker_entity_map.get(x, x) for x in self.speakers])
+        for paragraph in self.children:
+            for chunk in paragraph.children:
+                if chunk.is_direct() and chunk.speaker:
+                    chunk.speaker = speaker_entity_map.get(chunk.speaker, chunk.speaker)
 
 
 class Paragraph(NovelPart):
@@ -126,8 +177,8 @@ class ParagraphChunk(NovelPart):
     def __init__(self, data=None, paragraph=None):
         super(ParagraphChunk, self).__init__(data=data, parent=paragraph)
         self.paragraph = paragraph
-        self.speaker = data.get('speaker', None)
-        self.speaker_rule = data.get('speaker_rule', None)
+        self.speaker = self.data.get('speaker', None)
+        self.speaker_rule = self.data.get('speaker_rule', None)
         self.potential_speakers = []
 
     def get_type(self):
@@ -206,9 +257,6 @@ class Context(object):
 
         self.last_chapter = self.current_chapter
         self.current_chapter = chapter
-
-        if self.last_chapter:
-            self.last_chapter.set_speakers(self.speaker_history)
 
         self.speaker_history = []
 
@@ -323,6 +371,10 @@ class Context(object):
 
         return False
 
+    def process_chapter_done(self, chapter):
+        chapter.set_speakers(self.speaker_history)
+        self.speaker_history = []
+
     def process_sentence(self, sentence, edb):
         self.set_chunk(sentence.chunk)
 
@@ -334,7 +386,7 @@ class Context(object):
             if not entities:
                 continue
 
-            sentence.add_entities(entities)
+            sentence.add_entity(entity)
 
             if not self.is_direct():
                 if 'person' in entities:

@@ -257,7 +257,7 @@ class EntityDatabase(object):
 
         self.build_reverse_map()
 
-    def look_up(self, entity):
+    def look_up(self, entity, normalize=False):
         if entity not in self.reverse_map:
             return None
 
@@ -267,6 +267,19 @@ class EntityDatabase(object):
         paths = self.reverse_map[entity]
         result = defaultdict(set)
         for path in paths:
-            result[path[0]].add(entity)
+            if normalize:
+                result[path[0]].add(path[-1])
+            else:
+                result[path[0]].add(entity)
 
         return dict(result)
+
+    def decide(self, name, candidates):
+        if len(candidates) == 1:
+            return candidates[0]
+
+        result = self.entities['preference'].get(name)
+        if result and result in candidates:
+            return result
+
+        return None
