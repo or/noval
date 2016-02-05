@@ -34,6 +34,7 @@ class Data(object):
     def __init__(self):
         self.overall = Vocabulary()
         self.characters = defaultdict(Vocabulary)
+        self.dialogues = defaultdict(lambda: defaultdict(int))
 
     def add(self, entities, words, character):
         self.overall.add(entities, words)
@@ -43,6 +44,9 @@ class Data(object):
         self.overall.add_word(word)
         self.characters[character].add_word(word)
 
+    def add_talked_to(self, first, second, score):
+        self.dialogues[first][second] += score
+
     def save(self, filename):
         json.dump(self.to_dict(), open(filename, 'w'), indent=4)
 
@@ -50,4 +54,8 @@ class Data(object):
         return {
             'overall': self.overall.to_dict(),
             'characters': {k: v.to_dict() for k, v in self.characters.items()},
+            'dialogues': {
+                k: {k2: v2 for k2, v2 in v.items()}
+                for k, v in self.dialogues.items()
+            }
         }
