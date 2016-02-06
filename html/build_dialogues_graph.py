@@ -147,6 +147,7 @@ if __name__ == '__main__':
           color: 'lightgray'
         },
         layout: {
+          randomSeed: 2107,
           improvedLayout: true
         },
         physics: {
