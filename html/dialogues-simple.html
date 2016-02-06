@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dialogues</title>
+
+  <style type="text/css">
+    body {
+      font: 10pt arial;
+    }
+    #dialogues {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color:#333333;
+    }
+  </style>
+
+  <script type="text/javascript" src="vis.min.js"></script>
+  <link type="text/css" href="vis.min.css" rel="stylesheet"/>
+
+  <script type="text/javascript">
+    var nodes = null;
+    var edges = null;
+    var network = null;
+
+    // Called when the Visualization API is loaded.
+    function draw() {
+      // create people.
+      // value corresponds with the age of the person
+      nodes = [{"title": "Flement Brax", "level": 0, "id": 1}, {"color": "#c88", "title": "Tyrion Lannister", "level": 2, "id": 2, "group": "Lannister"}, {"color": "#c88", "title": "Kevan Lannister", "level": 2, "id": 3, "group": "Lannister"}, {"title": "Lefford", "level": 0, "id": 4}, {"title": "Rickard Karstark", "level": 0, "id": 5}, {"title": "Jonos Bracken", "level": 0, "id": 6}, {"title": "Brynden Tully", "level": 0, "id": 7}, {"color": "#8c8", "title": "Catelyn Stark", "level": 1, "id": 8, "group": "Stark"}, {"color": "#c84", "title": "Maege Mormont", "level": 0, "id": 9, "group": "Mormont"}, {"title": "Jon Umber", "level": 0, "id": 10}, {"title": "Harys Swyft", "level": 0, "id": 11}, {"title": "Addarn Marbrand", "level": 0, "id": 12}, {"color": "#c88", "title": "Tywin Lannister", "level": 2, "id": 13, "group": "Lannister"}, {"color": "#9d9", "title": "Jon Snow", "level": 1, "id": 14, "group": "Snow"}, {"color": "#8c8", "title": "Brandon Stark", "level": 1, "id": 15, "group": "Stark"}, {"title": "Alliser Thorne", "level": 0, "id": 16}, {"title": "Samwell Tarly", "level": 0, "id": 17}, {"title": "Randyll Tarly", "level": 0, "id": 18}, {"color": "#c84", "title": "Jeor Mormont", "level": 0, "id": 19, "group": "Mormont"}, {"color": "#8c8", "title": "Robb Stark", "level": 1, "id": 20, "group": "Stark"}, {"color": "#88c", "title": "Joffrey Baratheon", "level": 4, "id": 21, "group": "Baratheon"}, {"title": "Maester Aemon", "level": 0, "id": 22}, {"title": "Varys", "level": 0, "id": 23}, {"color": "#8c8", "title": "Arya Stark", "level": 1, "id": 24, "group": "Stark"}, {"color": "#8c8", "title": "Eddard Stark", "level": 1, "id": 25, "group": "Stark"}, {"title": "Tommen", "level": 0, "id": 26}, {"title": "Bowen Marsh", "level": 0, "id": 27}, {"title": "Theon Greyjoy", "level": 0, "id": 28}, {"title": "Jory Cassel", "level": 0, "id": 29}, {"title": "Jaremy Rykker", "level": 0, "id": 30}, {"color": "#88c", "title": "Robert Baratheon", "level": 4, "id": 31, "group": "Baratheon"}, {"color": "#8c8", "title": "Benjen Stark", "level": 1, "id": 32, "group": "Stark"}, {"title": "Bronn", "level": 0, "id": 33}, {"title": "Robert Arryn", "level": 0, "id": 34}, {"title": "Petyr Baelish", "level": 0, "id": 35}, {"title": "Helman Tallhart", "level": 0, "id": 36}, {"title": "Vardis Egen", "level": 0, "id": 37}, {"title": "Lysa Arryn", "level": 0, "id": 38}, {"title": "Moreo Turnitis", "level": 0, "id": 39}, {"title": "Luwin", "level": 0, "id": 40}, {"title": "Willis Wode", "level": 0, "id": 41}, {"title": "Stevron Frey", "level": 0, "id": 42}, {"title": "Mordane", "level": 0, "id": 43}, {"title": "Jared Frey", "level": 0, "id": 44}, {"title": "Rodrik Cassel", "level": 0, "id": 45}, {"color": "#c88", "title": "Jaime Lannister", "level": 2, "id": 46, "group": "Lannister"}, {"title": "Donnel Waynwood", "level": 0, "id": 47}, {"title": "Walder Frey", "level": 0, "id": 48}, {"title": "Nestor Royce", "level": 0, "id": 49}, {"title": "Morton Waynwood", "level": 0, "id": 50}, {"title": "Wylis Manderly", "level": 0, "id": 51}, {"title": "Lyn Corbray", "level": 0, "id": 52}, {"title": "Hunter", "level": 0, "id": 53}, {"title": "Hoster Tully", "level": 0, "id": 54}, {"title": "Hodor", "level": 0, "id": 55}, {"title": "Old Nan", "level": 0, "id": 56}, {"color": "#8c8", "title": "Rickon Stark", "level": 1, "id": 57, "group": "Stark"}, {"color": "#c84", "title": "Jorah Mormont", "level": 0, "id": 58, "group": "Mormont"}, {"color": "#ffd700", "title": "Viserys Targaryen", "level": 3, "id": 59, "group": "Targaryen"}, {"title": "Drogo", "level": 0, "id": 60}, {"title": "Illyrio Mopatis", "level": 0, "id": 61}, {"color": "#ffd700", "title": "Daenerys Targaryen", "level": 3, "id": 62, "group": "Targaryen"}, {"title": "Qotho", "level": 0, "id": 63}, {"title": "Byan Votyris", "level": 0, "id": 64}, {"color": "#ffd700", "title": "Rhaegar Targaryen", "level": 3, "id": 65, "group": "Targaryen"}, {"title": "Lady", "level": 0, "id": 66}, {"color": "#8c8", "title": "Sansa Stark", "level": 1, "id": 67, "group": "Stark"}, {"title": "Pycelle", "level": 0, "id": 68}, {"title": "Myrcella", "level": 0, "id": 69}, {"title": "Marq Piper", "level": 0, "id": 70}, {"title": "Tytos Blackwood", "level": 0, "id": 71}, {"title": "Raymun Darry", "level": 0, "id": 72}, {"title": "Roose Bolton", "level": 0, "id": 73}, {"title": "Wendel Manderly", "level": 0, "id": 74}, {"title": "Mord", "level": 0, "id": 75}, {"title": "Jon Arryn", "level": 0, "id": 76}, {"title": "Addam Marbrand", "level": 0, "id": 77}, {"title": "Barristan Selmy", "level": 0, "id": 78}, {"title": "Albar Royce", "level": 0, "id": 79}, {"title": "Othell Yarwyck", "level": 0, "id": 80}, {"title": "Loon", "level": 0, "id": 81}, {"title": "Janos Slynt", "level": 0, "id": 82}, {"color": "#c88", "title": "Cersei Lannister", "level": 2, "id": 83, "group": "Lannister"}, {"color": "#88c", "title": "Renly Baratheon", "level": 4, "id": 84, "group": "Baratheon"}, {"title": "Sandor Clegane", "level": 0, "id": 85}, {"color": "#ffd700", "title": "Targaryen", "level": 3, "id": 86, "group": "Targaryen"}, {"title": "Fat Tom", "level": 0, "id": 87}, {"title": "Edmure Tully", "level": 0, "id": 88}, {"title": "Will", "level": 0, "id": 89}, {"title": "Waymar Royce", "level": 0, "id": 90}, {"title": "Boros Blount of the Kingsguard", "level": 0, "id": 91}, {"color": "#8c8", "title": "Stark", "level": 1, "id": 92, "group": "Stark"}, {"title": "Beric Dondarrion", "level": 0, "id": 93}, {"title": "Gregor Clegane", "level": 0, "id": 94}, {"title": "Meryn Trant", "level": 0, "id": 95}, {"title": "Ilyn Payne", "level": 0, "id": 96}, {"title": "Commander", "level": 0, "id": 97}, {"title": "Karyl Vance", "level": 0, "id": 98}, {"title": "Arthur Dayne", "level": 0, "id": 99}, {"title": "Oswell Whent", "level": 0, "id": 100}, {"title": "Gerold Hightower", "level": 0, "id": 101}, {"title": "Loras Tyrell", "level": 0, "id": 102}, {"title": "Gared", "level": 0, "id": 103}, {"title": "Syrio Forel", "level": 0, "id": 104}, {"title": "Boros Blount", "level": 0, "id": 105}, {"title": "Aethelmure", "level": 0, "id": 106}, {"title": "Robar Royce", "level": 0, "id": 107}];
+
+      // create connections between people
+      // value corresponds with the amount of contact between two people
+      edges = [{"value": 1432, "to": 25, "from": 20}, {"value": 785, "to": 18, "from": 14}, {"value": 1025, "to": 38, "from": 8}, {"value": 552, "to": 61, "from": 59}, {"value": 860, "to": 38, "from": 2}, {"value": 3095, "to": 45, "from": 8}, {"value": 1903, "to": 67, "from": 24}, {"value": 2875, "to": 25, "from": 8}, {"value": 5010, "to": 19, "from": 14}, {"value": 691, "to": 60, "from": 58}, {"value": 2047, "to": 104, "from": 24}, {"value": 492, "to": 7, "from": 2}, {"value": 6806, "to": 33, "from": 2}, {"value": 811, "to": 28, "from": 20}, {"value": 501, "to": 60, "from": 59}, {"value": 623, "to": 62, "from": 61}, {"value": 540, "to": 102, "from": 25}, {"value": 587, "to": 67, "from": 35}, {"value": 1837, "to": 48, "from": 8}, {"value": 2584, "to": 13, "from": 2}, {"value": 5385, "to": 35, "from": 25}, {"value": 772, "to": 16, "from": 14}, {"value": 9082, "to": 62, "from": 58}, {"value": 4548, "to": 20, "from": 8}, {"value": 740, "to": 90, "from": 89}, {"value": 685, "to": 56, "from": 15}, {"value": 1275, "to": 13, "from": 3}, {"value": 499, "to": 87, "from": 25}, {"value": 4127, "to": 68, "from": 25}, {"value": 725, "to": 67, "from": 43}, {"value": 2032, "to": 62, "from": 60}, {"value": 2004, "to": 17, "from": 14}, {"value": 927, "to": 59, "from": 58}, {"value": 9813, "to": 31, "from": 25}, {"value": 2531, "to": 20, "from": 15}, {"value": 908, "to": 85, "from": 67}, {"value": 531, "to": 103, "from": 90}, {"value": 837, "to": 27, "from": 14}, {"value": 1481, "to": 62, "from": 59}, {"value": 5161, "to": 25, "from": 23}, {"value": 2252, "to": 24, "from": 14}, {"value": 583, "to": 11, "from": 2}, {"value": 1447, "to": 8, "from": 7}, {"value": 931, "to": 54, "from": 8}, {"value": 510, "to": 28, "from": 8}, {"value": 2843, "to": 22, "from": 14}, {"value": 1896, "to": 19, "from": 2}, {"value": 948, "to": 25, "from": 14}, {"value": 1930, "to": 25, "from": 24}, {"value": 534, "to": 8, "from": 2}, {"value": 2164, "to": 67, "from": 21}, {"value": 963, "to": 66, "from": 15}, {"value": 566, "to": 47, "from": 8}, {"value": 852, "to": 29, "from": 25}, {"value": 1182, "to": 3, "from": 2}, {"value": 3014, "to": 14, "from": 2}, {"value": 1827, "to": 83, "from": 25}, {"value": 970, "to": 26, "from": 24}, {"value": 1477, "to": 84, "from": 25}, {"value": 643, "to": 46, "from": 2}, {"value": 594, "to": 63, "from": 62}, {"value": 738, "to": 20, "from": 14}, {"value": 4809, "to": 40, "from": 15}, {"value": 2368, "to": 32, "from": 14}, {"value": 713, "to": 40, "from": 25}, {"value": 808, "to": 30, "from": 19}];
+
+      // create a network
+      var container = document.getElementById('dialogues');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {
+        nodes: {
+          borderWidth:1,
+          size:30,
+          color: {
+            border: '#222222',
+            background: '#666666'
+          },
+          font:{color:'#eeeeee'}
+        },
+        edges: {
+          color: 'lightgray'
+        },
+        layout: {
+          improvedLayout: true
+        },
+        physics: {
+          enabled: true,
+          barnesHut: {
+            springLength: 300,
+            avoidOverlap: 0,
+            gravitationalConstant: -5000,
+            centralGravity: 0.5
+          },
+          repulsion: {
+            nodeDistance: 150,
+            centralGravity: 0.2
+          },
+          solver: "repulsion"
+        }
+      };
+      network = new vis.Network(container, data, options);
+    }
+  </script>
+</head>
+
+<body onload="draw()">
+
+<div id="dialogues"></div>
+</body>
+</html>
