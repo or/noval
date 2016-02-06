@@ -3,7 +3,11 @@ import argparse
 import json
 import os
 
-IMAGE_DIR = "pics"
+IMAGE_DIR = "pics/small"
+DEFINITE_EDGES = [
+    ('Brandon Stark', 'Hodor'),
+    ('Robb Stark', 'Roose Bolton'),
+]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -74,6 +78,9 @@ if __name__ == '__main__':
     def edge_counts(speaker_id, target_id, value):
         speaker_node = nodes[speaker_id - 1]
         target_node = nodes[target_id - 1]
+        if tuple(sorted([speaker_node['title'], target_node['title']])) in DEFINITE_EDGES:
+            return True
+
         if "image" in speaker_node and "image" in target_node:
             cutoff = max_score * args.cutoff / 2
 
