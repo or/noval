@@ -8,6 +8,7 @@ DEFINITE_EDGES = [
     ('Brandon Stark', 'Hodor'),
     ('Robb Stark', 'Roose Bolton'),
     ('Lysa Arryn', 'Robert Arryn'),
+    ('Cersei Lannister', 'Robert Baratheon'),
 ]
 IGNORED_NODES = {
     "<unknown>",
