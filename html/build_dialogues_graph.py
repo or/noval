@@ -7,11 +7,20 @@ IMAGE_DIR = "pics/small"
 DEFINITE_EDGES = [
     ('Brandon Stark', 'Hodor'),
     ('Robb Stark', 'Roose Bolton'),
+    ('Lysa Arryn', 'Robert Arryn'),
 ]
+IGNORED_NODES = {
+    "<unknown>",
+    "<narrarow>",
+    "Stark",
+    "Targaryen",
+    "Lady",
+    "Rhaegar Targaryen",
+}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cutoff", type=float, default=0.02)
+    parser.add_argument("--cutoff", type=float, default=0.05)
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()
@@ -21,10 +30,15 @@ if __name__ == '__main__':
     colors = {
         "Stark": "#8c8",
         "Snow": "#9d9",
-        "Lannister": "#c88",
-        "Targaryen": "#ffd700",
-        "Baratheon": "#88c",
-        "Mormont": "#c84",
+        "Lannister": "#d22",
+        "Targaryen": "#b80",
+        "Aemon": "#b80",
+        "Baratheon": "#ffd700",
+        "Mormont": "#fff",
+        "Tully": "#88c",
+        "Arryn": "#55a",
+        "Greyjoy": "#777",
+        "Tarly": "#2f2",
     }
     levels = {
         "Stark": 1,
@@ -38,12 +52,21 @@ if __name__ == '__main__':
     edge_map = {}
 
     def get_node_id(speaker):
-        if speaker.startswith('<'):
+        if speaker in IGNORED_NODES:
             return None
 
         if speaker not in node_map:
             new_id = len(nodes) + 1
-            node = {"id": new_id, "title": speaker}
+            node = {
+                "id": new_id,
+                "title": speaker,
+                "shadow": {
+                    "enabled": True,
+                    "size": 20,
+                    "x": 10,
+                    "y": 10,
+                }
+            }
             house = speaker.split()[-1]
             if house in colors:
                 node["color"] = colors[house]
@@ -86,6 +109,12 @@ if __name__ == '__main__':
 
         cutoff = max_score * args.cutoff
         return value >= cutoff
+
+    for n1, n2 in DEFINITE_EDGES:
+        id1 = node_map[n1]
+        id2 = node_map[n2]
+        key = tuple(sorted([id1, id2]))
+        edge_map[key] = 1
 
     edges = [{"from": k[0], "to": k[1], "value": v}
              for k, v in edge_map.items() if edge_counts(k[0], k[1], v)]
