@@ -73,10 +73,8 @@ if __name__ == '__main__':
                 node["color"] = colors[house]
                 node["group"] = house
 
-            node["level"] = levels.get(house, 0)
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):
-                node["shape"] = "circularImage"
                 node["image"] = img
 
             nodes.append(node)

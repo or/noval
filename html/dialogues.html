@@ -23,6 +23,12 @@
 
   <script type="text/javascript">
     function draw(data) {
+      data.nodes.forEach(function(n) {
+        if (n.image) {
+          n.shape = "circularImage";
+        }
+      });
+
       var container = document.getElementById('dialogues');
       var options = {
         nodes: {
