@@ -64,18 +64,19 @@ var Network = function() {
 
     this.force = d3.layout.force()
       .size([this.width, this.height])
-      .charge(-200)
+      .charge(-100)
       .linkDistance(50)
+      .linkStrength(1.5)
       .on("tick", function() {
-        network.link
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
+        network.link.attr("d", function(d) {
+          return "M" + d.source.x + "," + d.source.y
+            + "S" + d.intermediate.x + "," + d.intermediate.y
+            + " " + d.target.x + "," + d.target.y;
+        });
 
-          network.node
-            .attr("cx", function(d) { return d.x; })
-            .attr("cy", function(d) { return d.y; });
+        network.node
+          .attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
       });
 
     this.node_double_click = function(d) {
@@ -109,8 +110,8 @@ var Network = function() {
 
     this.data = data;
     this.data.nodes.forEach(function(n) {
-      n.x = Math.floor(Math.random() * network.width);
-      n.y = Math.floor(Math.random() * network.height);
+      n.x = Math.floor(network.width / 2 + Math.random() * 100);
+      n.y = Math.floor(network.height / 2 + Math.random() * 100);
       n.radius = 10;
       n.weight = 1;
 
@@ -154,14 +155,37 @@ var Network = function() {
   }
 
   this.update = function() {
-    this.update_links();
-    this.update_nodes();
+    var links = [];
+    var nodes = this.data.nodes.slice();
+    this.data.edges.forEach(function(e) {
+      var s = e.source,
+          t = e.target,
+          i = {}; // intermediate node
 
-    this.force.start();
-  }
+      i.x = Math.floor(this.width / 2 + Math.random() * 100);
+      i.y = Math.floor(this.height / 2 + Math.random() * 100);
 
-  this.update_nodes = function() {
-    this.force.nodes(this.data.nodes);
+      nodes.push(i);
+      links.push({source: s, target: i}, {source: i, target: t});
+      e.intermediate = i;
+    });
+    this.force.links(links);
+
+    this.link = this.linksG.selectAll("line.link")
+      .data(this.data.edges, function(d) { return d.source.id + "_" + d.target.id; });
+
+    this.link.enter().append("path")
+      .attr("class", "link")
+      .attr("fill", "none")
+      .attr("stroke", "#fff")
+      .attr("stroke-opacity", 0.8)
+      .attr("stroke-width", function(d) {
+        return d.value * 8 / this.max_edge_value;
+      }.bind(this))
+
+    this.link.exit().remove();
+
+    this.force.nodes(nodes);
 
     this.node = this.nodesG.selectAll("circle.node")
       .data(this.data.nodes, function(d) { return d.id; });
@@ -172,14 +196,14 @@ var Network = function() {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .attr("r", function(d) { return d.radius; })
-      .style("stroke", function(d) { return "#555"; })
+      .style("stroke", function(d) { return d.color || "#999"; })
       .style("stroke-width", 1.0)
       .style("clip-path", function(d) { return "#circle"; })
       .style("fill", function(d) {
         if (d.image_id) {
           return 'url(#' + d.image_id + ')';
         } else {
-          return "#ddd";
+          return "#777";
         }
       })
       .style("filter", "url(#shadow)")
@@ -190,27 +214,8 @@ var Network = function() {
     //  .on("mouseout", hideDetails)
 
     this.node.exit().remove();
-  }
 
-  this.update_links = function() {
-    this.force.links(this.data.edges);
-
-    this.link = this.linksG.selectAll("line.link")
-      .data(this.data.edges, function(d) { return d.source.id + "_" + d.target.id; });
-
-    this.link.enter().append("line")
-      .attr("class", "link")
-      .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.8)
-      .attr("stroke-width", function(d) {
-        return d.value * 8 / this.max_edge_value;
-      }.bind(this))
-      .attr("x1", function(d) { return d.source.x; })
-      .attr("y1", function(d) { return d.source.y; })
-      .attr("x2", function(d) { return d.target.x; })
-      .attr("y2", function(d) { return d.target.y; });
-
-    this.link.exit().remove();
+    this.force.start();
   }
 }
 
