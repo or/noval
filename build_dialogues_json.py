@@ -38,10 +38,11 @@ if __name__ == '__main__':
         "tarly": "#2f2",
     }
 
-    groups = {}
+    groups = []
     for house in colors:
         group_data = {
-            "name": house,
+            "id": house,
+            "name": house.capitalize(),
             "color": colors[house],
         }
 
@@ -49,7 +50,7 @@ if __name__ == '__main__':
         if os.path.exists("html/" + banner_img):
             group_data["image"] = banner_img
 
-        groups[house] = group_data
+        groups.append(group_data)
 
     node_map = {}
     nodes = []
