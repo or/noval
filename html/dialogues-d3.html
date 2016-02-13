@@ -3,6 +3,7 @@
 <head>
   <title>Dialogues</title>
 
+  <link type="text/css" href="d3.slider.css" rel="stylesheet"/>
   <style type="text/css">
     body {
       font: 10pt arial;
@@ -13,18 +14,53 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background-color:#333333;
+      background-color: #333333;
+    }
+
+    #cutoff-slider {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 100;
+    }
+
+    #charge-slider {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 200px;
+      z-index: 100;
+    }
+
+    #node-distance-slider {
+      position: absolute;
+      bottom: 10px;
+      left: 250px;
+      width: 200px;
+      z-index: 100;
+    }
+
+    #linked-nodes-only-label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
     }
   </style>
 
   <script type="text/javascript" src="jquery.min.js"></script>
   <script type="text/javascript" src="d3.min.js"></script>
+  <script type="text/javascript" src="d3.slider.js"></script>
   <script type="text/javascript" src="dialogues.js"></script>
 
 </head>
 
 <body onload="load_dialogues()">
 
-<div id="dialogues"></div>
+<div id="dialogues">
+  <div id="cutoff-slider"></div>
+  <div id="charge-slider"></div>
+  <div id="node-distance-slider"></div>
+  <label id="linked-nodes-only-label"><input id="linked-nodes-only" type="checkbox">linked nodes only</label>
+</div>
 </body>
 </html>
