@@ -8,9 +8,10 @@ var Network = function() {
     this.cutoff_slider = d3.slider()
       .min(0.01)
       .max(1)
-      .value(0.5)
+      .value(0.54)
       .orientation("vertical")
       .on("slide", function(evt, value) {
+        console.log("cutoff:", value);
         this.update();
       }.bind(this));
 
@@ -39,6 +40,12 @@ var Network = function() {
     this.linked_nodes_only = d3.select("#linked-nodes-only");
     this.linked_nodes_only.property("checked", true);
     this.linked_nodes_only.on("change", function(value) {
+      this.update();
+    }.bind(this));
+
+    this.picture_nodes_only = d3.select("#picture-nodes-only");
+    this.picture_nodes_only.property("checked", true);
+    this.picture_nodes_only.on("change", function(value) {
       this.update();
     }.bind(this));
 
@@ -197,6 +204,13 @@ var Network = function() {
           i = {id: s.id + "_" + t.id,
                type: "intermediate"}; // intermediate node
 
+      if (s.image && t.image) {
+        // if both real nodes have an image, then just set a flag here,
+        // so the intermediate node also is included when only non-image
+        // nodes are shown
+        i.image = true;
+      }
+
       i.x = (s.x + t.x) / 2;
       i.y = (s.y + t.y) / 2;
 
@@ -236,12 +250,30 @@ var Network = function() {
         return;
       }
 
+      if (this.picture_nodes_only.property("checked") &&
+          (!s.image || !t.image)) {
+        return;
+      }
+
       links.push({source: s, target: i, value: e.value, normalized_value: e.normalized_value},
                  {source: i, target: t, value: e.value, normalized_value: e.normalized_value});
       edges.push(e);
       linked_node_map[s.id] = s;
       linked_node_map[t.id] = t;
       linked_node_map[i.id] = i;
+    }.bind(this));
+
+    var nodes = [];
+    this.all_nodes.forEach(function(n) {
+      if (this.linked_nodes_only.property("checked") && !linked_node_map[n.id]) {
+        return;
+      }
+
+      if (this.picture_nodes_only.property("checked") && !n.image) {
+        return;
+      }
+
+      nodes.push(n);
     }.bind(this));
 
     this.force.links(links);
@@ -263,15 +295,6 @@ var Network = function() {
 
     this.link.exit().remove();
 
-    var nodes;
-    if (this.linked_nodes_only.property("checked")) {
-      nodes = [];
-      for (var key in linked_node_map) {
-        nodes.push(linked_node_map[key]);
-      }
-    } else {
-      nodes = this.all_nodes.slice();
-    }
     this.force.nodes(nodes);
 
     if (this.node) {
