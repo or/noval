@@ -49,6 +49,17 @@ var Network = function() {
       this.update();
     }.bind(this));
 
+    this.allow_pinning = d3.select("#allow-pinning");
+    this.allow_pinning.property("checked", false);
+    this.allow_pinning.on("change", function(value) {
+      if (!value) {
+        this.force.nodes().forEach(function(n) {
+          n.fixed = false;
+        });
+        this.force.resume();
+      }
+    }.bind(this));
+
     function zoom() {
       if (d3.event.defaultPrevented) return;
       this.graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
@@ -57,11 +68,11 @@ var Network = function() {
     this.node_double_click = function(d) {
       d3.event.stopPropagation();
       d3.select(this).classed("fixed", d.fixed = false);
-      network.force.start();
+      network.force.resume();
     }
 
     var zoom = d3.behavior.zoom()
-      .scaleExtent([1, 8])
+      .scaleExtent([0.2, 8])
       .on("zoom", zoom.bind(this));
 
     this.svg = d3.select(selector).append("svg")
@@ -127,7 +138,7 @@ var Network = function() {
           return network.link_distance_slider.value() * (1.5 - d.normalized_value);
         })
 
-      this.force.start();
+      this.force.resume();
     }
 
     this.force = d3.layout.force()
@@ -150,8 +161,16 @@ var Network = function() {
       d3.select(this).classed("fixed", d.fixed = true);
     }
 
+    function dragend(d) {
+      d3.event.sourceEvent.stopPropagation();
+      if (!network.allow_pinning.property("checked")) {
+        d.fixed = false;
+      }
+    }
+
     this.drag = this.force.drag()
-      .on("dragstart", dragstart);
+      .on("dragstart", dragstart)
+      .on("dragend", dragend);
 
     this.load_data(data);
     this.update();
@@ -287,8 +306,8 @@ var Network = function() {
     this.link.enter().append("path")
       .attr("class", "link")
       .attr("fill", "none")
-      .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.8)
+      .attr("stroke", "#ddd")
+      .attr("stroke-opacity", 0.7)
       .attr("stroke-width", function(d) {
         return d.value * 8 / this.max_edge_value;
       }.bind(this));
