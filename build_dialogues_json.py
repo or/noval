@@ -4,12 +4,8 @@ import json
 import os
 
 IMAGE_DIR = "pics/small"
-DEFINITE_EDGES = [
-    ('Brandon Stark', 'Hodor'),
-    ('Robb Stark', 'Roose Bolton'),
-    ('Lysa Arryn', 'Robert Arryn'),
-    ('Cersei Lannister', 'Robert Baratheon'),
-]
+BANNER_DIR = "banners"
+
 IGNORED_NODES = {
     "<unknown>",
     "<narrarow>",
@@ -29,25 +25,32 @@ if __name__ == '__main__':
     data = json.load(open(args.input))
 
     colors = {
-        "Stark": "#8c8",
-        "Snow": "#9d9",
-        "Lannister": "#d22",
-        "Targaryen": "#b80",
-        "Aemon": "#b80",
-        "Baratheon": "#ffd700",
-        "Mormont": "#fff",
-        "Tully": "#88c",
-        "Arryn": "#55a",
-        "Greyjoy": "#777",
-        "Tarly": "#2f2",
+        "stark": "#8c8",
+        "snow": "#9d9",
+        "lannister": "#d22",
+        "targaryen": "#b80",
+        "aemon": "#b80",
+        "baratheon": "#ffd700",
+        "mormont": "#fff",
+        "tully": "#88c",
+        "arryn": "#55a",
+        "greyjoy": "#777",
+        "tarly": "#2f2",
     }
-    levels = {
-        "Stark": 1,
-        "Snow": 1,
-        "Lannister": 2,
-        "Targaryen": 3,
-        "Baratheon": 4,
-    }
+
+    groups = {}
+    for house in colors:
+        group_data = {
+            "name": house,
+            "color": colors[house],
+        }
+
+        banner_img = os.path.join(BANNER_DIR, house + ".jpg")
+        if os.path.exists("html/" + banner_img):
+            group_data["image"] = banner_img
+
+        groups[house] = group_data
+
     node_map = {}
     nodes = []
     edge_map = {}
@@ -60,18 +63,12 @@ if __name__ == '__main__':
             new_id = len(nodes) + 1
             node = {
                 "id": new_id,
-                "title": speaker,
-                "shadow": {
-                    "enabled": True,
-                    "size": 20,
-                    "x": 10,
-                    "y": 10,
-                }
+                "name": speaker,
             }
             house = speaker.split()[-1]
-            if house in colors:
-                node["color"] = colors[house]
-                node["group"] = house
+            if house in groups:
+                node["color"] = colors[house.lower()]
+                node["group"] = house.lower()
 
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):
@@ -97,28 +94,8 @@ if __name__ == '__main__':
 
     max_score = max(edge_map.values())
 
-    def edge_counts(speaker_id, target_id, value):
-        speaker_node = nodes[speaker_id - 1]
-        target_node = nodes[target_id - 1]
-        if tuple(sorted([speaker_node['title'], target_node['title']])) in DEFINITE_EDGES:
-            return "definite"
-
-        if "image" in speaker_node and "image" in target_node:
-            cutoff = max_score * args.cutoff / 2
-
-        cutoff = max_score * args.cutoff
-        if value >= cutoff:
-            return "ok"
-        else:
-            return "cutoff"
-
-    for n1, n2 in DEFINITE_EDGES:
-        id1 = node_map[n1]
-        id2 = node_map[n2]
-        key = tuple(sorted([id1, id2]))
-        edge_map[key] = 1
-
-    edges = [{"from": k[0], "to": k[1], "value": v, "flag": edge_counts(k[0], k[1], v)}
+    edges = [{"from": k[0], "to": k[1], "value": v}
              for k, v in edge_map.items()]
 
-    json.dump({'nodes': nodes, 'edges': edges}, open(args.output, "w"))
+    json.dump({'nodes': nodes, 'edges': edges, 'groups': groups},
+              open(args.output, "w"))

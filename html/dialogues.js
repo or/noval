@@ -378,7 +378,7 @@ var Network = function() {
       }.bind(this));
 
     this.node.append("title")
-      .text(function(d) { return d.title; });
+      .text(function(d) { return d.name; });
 
     this.node.exit().remove();
 
