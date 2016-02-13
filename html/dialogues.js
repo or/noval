@@ -37,6 +37,7 @@ var Network = function() {
     d3.select("#node-distance-slider").call(this.link_distance_slider);
 
     this.linked_nodes_only = d3.select("#linked-nodes-only");
+    this.linked_nodes_only.property("checked", true);
     this.linked_nodes_only.on("change", function(value) {
       this.update();
     }.bind(this));
