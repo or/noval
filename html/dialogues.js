@@ -59,6 +59,10 @@ var Network = function() {
       }
     }.bind(this));
 
+    this.svg = d3.select(selector).append("svg")
+      .attr("width", this.width)
+      .attr("height", this.height);
+
     function zoom() {
       if (d3.event.defaultPrevented) return;
       this.graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
@@ -70,13 +74,12 @@ var Network = function() {
       network.force.resume();
     }
 
+    var initial_zoom = this.height / 500;
     var zoom = d3.behavior.zoom()
       .scaleExtent([0.2, 8])
-      .on("zoom", zoom.bind(this));
-
-    this.svg = d3.select(selector).append("svg")
-      .attr("width", this.width)
-      .attr("height", this.height);
+      .on("zoom", zoom.bind(this))
+      .translate([(this.width - initial_zoom * this.width) / 2, (this.height - initial_zoom * this.height) / 2])
+      .scale(initial_zoom);
 
     this.defs = this.svg.append('svg:defs');
     var shadow = this.defs.append("filter")
@@ -109,7 +112,11 @@ var Network = function() {
     this.graph = this.svg
       .append("g")
       .call(zoom)
-      .append("g");
+      .append("g")
+      .attr("transform",
+            "translate(" + (this.width - initial_zoom * this.width) / 2 + "," +
+                           (this.height - initial_zoom * this.height) / 2 + ")" +
+            "scale(" + initial_zoom + "," + initial_zoom + ")");
 
     this.graph.append("rect")
       .attr("x", -10000)
