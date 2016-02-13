@@ -156,11 +156,17 @@ var Network = function() {
     this.force_update();
 
     function dragstart(d) {
+      if (d.type == "intermediate") {
+        return;
+      }
       d3.event.sourceEvent.stopPropagation();
       d3.select(this).classed("fixed", d.fixed = true);
     }
 
     function dragend(d) {
+      if (d.type == "intermediate") {
+        return;
+      }
       d3.event.sourceEvent.stopPropagation();
       if (!network.allow_pinning.property("checked")) {
         d.fixed = false;
