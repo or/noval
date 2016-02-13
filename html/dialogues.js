@@ -326,7 +326,12 @@ var Network = function() {
       .attr("class", "node")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
-      .attr("r", function(d) { return d.radius; })
+      .attr("r", function(d) {
+        if (d.hover) {
+          return 1.2 * d.radius;
+        }
+        return d.radius;
+      })
       .style("stroke", function(d) { return d.color || "#999"; })
       .style("stroke-width", 1.0)
       .style("clip-path", function(d) { return "#circle"; })
@@ -339,13 +344,28 @@ var Network = function() {
       })
       .style("filter", "url(#shadow)")
       .on("dblclick", this.node_double_click)
-      .call(this.drag);
+      .call(this.drag)
+      .on("mouseover", function(d) {
+        d.hover = true;
+        this.node.attr("r", function(d) {
+          if (d.hover) {
+            return 1.2 * d.radius;
+          }
+          return d.radius;
+        });
+      }.bind(this))
+      .on("mouseout", function(d) {
+        d.hover = false;
+        this.node.attr("r", function(d) {
+          if (d.hover) {
+            return 1.2 * d.radius;
+          }
+          return d.radius;
+        });
+      }.bind(this));
 
     this.node.append("title")
       .text(function(d) { return d.title; });
-
-    //node.on("mouseover", showDetails)
-    //  .on("mouseout", hideDetails)
 
     this.node.exit().remove();
 
