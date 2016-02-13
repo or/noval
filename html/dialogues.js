@@ -11,7 +11,6 @@ var Network = function() {
       .value(0.54)
       .orientation("vertical")
       .on("slide", function(evt, value) {
-        console.log("cutoff:", value);
         this.update();
       }.bind(this));
 
@@ -138,7 +137,7 @@ var Network = function() {
           return network.link_distance_slider.value() * (1.5 - d.normalized_value);
         })
 
-      this.force.resume();
+      this.force.start();
     }
 
     this.force = d3.layout.force()
