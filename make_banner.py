@@ -4,9 +4,18 @@ from PIL import Image
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--top-border", type=int, default=20)
-    parser.add_argument("--bottom-border", type=int, default=20)
-    parser.add_argument("--factor", type=float, default=1.5)
+    parser.add_argument(
+        "--top-border", type=int, default=20,
+        help="how much image data from the top to use for the filling")
+    parser.add_argument(
+        "--bottom-border", type=int, default=20,
+        help="how much image data from the bottom to use for the filling")
+    parser.add_argument(
+        "--factor", type=float, default=1.5,
+        help="height * factor will be the new height")
+    parser.add_argument(
+        "--offset", type=float, default=0.3,
+        help="the vertical position of the old image, 0 means at the top, 1 at the bottom")
     parser.add_argument("input")
     parser.add_argument("output")
 
@@ -17,7 +26,7 @@ if __name__ == '__main__':
     (width, height) = img.size
     new_height = round(height * args.factor)
     new_img = Image.new("RGB", (width, new_height))
-    y_offset = (new_height - height) // 2
+    y_offset = round((new_height - height) * args.offset)
     new_img.paste(img, (0, y_offset))
 
     top_border = img.crop((0, 0, width, args.top_border))
