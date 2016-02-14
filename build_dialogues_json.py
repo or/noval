@@ -15,9 +15,14 @@ IGNORED_NODES = {
     "Rhaegar Targaryen",
 }
 
+MAIN_GROUP = {
+    "Maester Aemon": "targaryen",
+}
+
 GROUP_ASSOCIATIONS = {
     "Joffrey Baratheon": ["lannister"],
     "Catelyn Stark": ["tully"],
+    "Maester Aemon": ["targaryen"],
 }
 
 if __name__ == '__main__':
@@ -34,7 +39,6 @@ if __name__ == '__main__':
         "snow": "#9d9",
         "lannister": "#d22",
         "targaryen": "#b80",
-        "aemon": "#b80",
         "baratheon": "#ffd700",
         "mormont": "#fff",
         "tully": "#88c",
@@ -73,7 +77,12 @@ if __name__ == '__main__':
             }
             house = speaker.split()[-1].lower()
             groups = []
-            if house in colors:
+            if speaker in MAIN_GROUP:
+                node["group"] = MAIN_GROUP[speaker]
+                node["color"] = colors[node["group"]]
+                groups.append(node["group"])
+
+            elif house in colors:
                 node["color"] = colors[house]
                 node["group"] = house
                 groups.append(house)
