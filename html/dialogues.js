@@ -13,7 +13,7 @@ var Network = function() {
         d3.select("#cutoff-slider label .value").text(value.toFixed(2));
         this.update();
       }.bind(this));
-
+    d3.select("#cutoff-slider label .value").text(this.cutoff_slider.value().toFixed(2));
     d3.select("#cutoff-slider").call(this.cutoff_slider);
 
     this.charge_slider = d3.slider()
@@ -24,7 +24,7 @@ var Network = function() {
         d3.select("#charge-slider label .value").text(-value.toFixed(0));
         this.force_update();
       }.bind(this));
-
+    d3.select("#charge-slider label .value").text(-this.charge_slider.value().toFixed(0));
     d3.select("#charge-slider").call(this.charge_slider);
 
     this.link_distance_slider = d3.slider()
@@ -32,11 +32,11 @@ var Network = function() {
       .max(80)
       .value(30)
       .on("slide", function(evt, value) {
-        d3.select("#node-distance-slider label .value").text(value.toFixed(0));
+        d3.select("#link-distance-slider label .value").text(value.toFixed(0));
         this.force_update();
       }.bind(this));
-
-    d3.select("#node-distance-slider").call(this.link_distance_slider);
+    d3.select("#link-distance-slider label .value").text(this.link_distance_slider.value().toFixed(0));
+    d3.select("#link-distance-slider").call(this.link_distance_slider);
 
     this.linked_nodes_only = d3.select("#linked-nodes-only");
     this.linked_nodes_only.property("checked", true);

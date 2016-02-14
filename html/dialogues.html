@@ -27,43 +27,37 @@
       background-position: 50% 50%;
     }
 
-    #cutoff-slider {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 200px;
-      z-index: 100;
+    .secondary {
+      color: #888;
+      border: 1px solid #888;
     }
 
-    #cutoff-slider label {
-      position: relative;
-      bottom: -1.5rem;
+    .secondary .d3-slider-handle {
+      background: #888;
+      background: linear-gradient(to bottom, #888 0%, #bbb 100%);
+      border: 1px solid #aaa;
     }
 
-    #charge-slider {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      width: 200px;
-      z-index: 100;
-    }
-
-    #charge-slider label {
+    .d3-slider label {
       position: relative;
       top: -1.5rem;
+      display: block;
     }
 
-    #node-distance-slider {
+    label .value {
+      float: right;
+    }
+
+    #slider-box {
       position: absolute;
-      bottom: 10px;
-      left: 250px;
+      top: 0px;
+      right: 20px;
       width: 200px;
       z-index: 100;
     }
 
-    #node-distance-slider label {
-      position: relative;
-      top: -1.5rem;
+    #slider-box div {
+      margin-top: 2.5rem;
     }
 
     #flags {
@@ -72,6 +66,7 @@
       left: 10px;
       padding: 0;
       margin: 0;
+      z-index: 100;
     }
 
     #flags li {
@@ -88,14 +83,16 @@
 <body onload="load_dialogues()">
 
 <div id="dialogues">
-  <div id="cutoff-slider">
-    <label>completeness <span class="value"></span></label>
-  </div>
-  <div id="charge-slider">
-    <label>graph size <span class="value"></span></label>
-  </div>
-  <div id="node-distance-slider">
-    <label>link spacing <span class="value"></span></label>
+  <div id="slider-box">
+    <div id="cutoff-slider">
+      <label>completeness <span class="value"></span></label>
+    </div>
+    <div id="charge-slider" class="secondary" style="margin-top: 4rem;">
+      <label>graph size <span class="value"></span></label>
+    </div>
+    <div id="link-distance-slider" class="secondary">
+      <label>link length <span class="value"></span></label>
+    </div>
   </div>
   <ul id="flags">
     <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
