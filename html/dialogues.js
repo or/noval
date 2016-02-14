@@ -19,7 +19,7 @@ var Network = function() {
     this.charge_slider = d3.slider()
       .min(-10)
       .max(-500)
-      .value(-70)
+      .value(-85)
       .on("slide", function(evt, value) {
         d3.select("#charge-slider label .value").text(-value.toFixed(0));
         this.force_update();
@@ -30,7 +30,7 @@ var Network = function() {
     this.link_distance_slider = d3.slider()
       .min(10)
       .max(80)
-      .value(30)
+      .value(40)
       .on("slide", function(evt, value) {
         d3.select("#link-distance-slider label .value").text(value.toFixed(0));
         this.force_update();
@@ -175,6 +175,9 @@ var Network = function() {
         .size([this.width, this.height])
         .gravity(0.1)
         .charge(function(d) {
+          if (d.intermediate) {
+            return 0.2 * network.charge_slider.value();
+          }
           var value = d.edge_value_sum || 0;
           var v = value / network.max_edge_value_sum;
           v = Math.sqrt(v);
