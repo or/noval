@@ -22,7 +22,13 @@ MAIN_GROUP = {
 GROUP_ASSOCIATIONS = {
     "Joffrey Baratheon": ["lannister"],
     "Catelyn Stark": ["tully"],
-    "Maester Aemon": ["targaryen"],
+    "Maester Aemon": ["targaryen", "nights-watch"],
+    "Jon Snow": ["nights-watch"],
+    "Samwell Tarly": ["nights-watch"],
+    "Jeor Mormont": ["nights-watch"],
+    "Benjen Stark": ["nights-watch"],
+    "Bowen Marsh": ["nights-watch"],
+    "Alliser Thorne": ["nights-watch"],
 }
 
 if __name__ == '__main__':
@@ -45,6 +51,7 @@ if __name__ == '__main__':
         "arryn": "#55a",
         "greyjoy": "#777",
         "tarly": "#2f2",
+        "nights-watch": "#000",
     }
 
     groups = []
