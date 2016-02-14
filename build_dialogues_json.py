@@ -45,6 +45,7 @@ if __name__ == '__main__':
         "tully": "#88c",
         "arryn": "#55a",
         "greyjoy": "#777",
+        "frey": "#555",
         "tarly": "#2f2",
         "nights-watch": "#000",
     }

@@ -9,6 +9,10 @@ for i in $(ls -1); do
       continue
     fi
   fi
+  if [ "$name" = "frey" ]; then
+    continue
+  fi
+
   echo $name
   ../make_banner.py $i ../html/banners/$name.jpg
 done
