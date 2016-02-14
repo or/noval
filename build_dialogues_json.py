@@ -42,7 +42,7 @@ if __name__ == '__main__':
     for house in colors:
         group_data = {
             "id": house,
-            "name": house.capitalize(),
+            "name": "House " + house.capitalize(),
             "color": colors[house],
         }
 
