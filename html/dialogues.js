@@ -431,6 +431,13 @@ var Network = function() {
     this.banner_child
       .filter(function(d) { return d.shape == "shield" })
       .append("path")
+      .attr("stroke-opacity", function(d) {
+        if (d.id == "nights-watch" || d.id == "targaryen") {
+          return 0.3;
+        }
+        return 0;
+      })
+      .attr("stroke", "#888")
       .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z");
 
     // inside the banner box the width is 100, which is then scaled
