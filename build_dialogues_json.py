@@ -56,18 +56,25 @@ if __name__ == '__main__':
     }
 
     groups = []
-    for house in colors:
+    for group in colors:
+        if group == "dothraki":
+            name = "Dothraki"
+        elif group == "nights-watch":
+            name = "Night's Watch"
+        else:
+            name = "House " + group.capitalize(),
+
         group_data = {
-            "id": house,
-            "name": "House " + house.capitalize(),
-            "color": colors[house],
+            "id": group,
+            "name": name,
+            "color": colors[group],
         }
 
-        banner_img = os.path.join(BANNER_DIR, house + ".jpg")
+        banner_img = os.path.join(BANNER_DIR, group + ".jpg")
         if os.path.exists("html/" + banner_img):
             group_data["image"] = banner_img
 
-        if house == "dothraki":
+        if group == "dothraki":
             group_data["shape"] = "circle"
         else:
             group_data["shape"] = "shield"
@@ -88,12 +95,12 @@ if __name__ == '__main__':
                 "id": new_id,
                 "name": speaker,
             }
-            house = speaker.split()[-1].lower()
+            group = speaker.split()[-1].lower()
             groups = []
             if speaker in GROUP_ASSOCIATIONS:
                 groups = GROUP_ASSOCIATIONS[speaker]
-            elif house in colors:
-                groups.append(house)
+            elif group in colors:
+                groups.append(group)
 
             if groups:
                 node["groups"] = groups
