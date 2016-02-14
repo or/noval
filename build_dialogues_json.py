@@ -15,18 +15,14 @@ IGNORED_NODES = {
     "Rhaegar Targaryen",
 }
 
-MAIN_GROUP = {
-    "Maester Aemon": "targaryen",
-}
-
 GROUP_ASSOCIATIONS = {
-    "Joffrey Baratheon": ["lannister"],
-    "Catelyn Stark": ["tully"],
-    "Maester Aemon": ["targaryen", "nights-watch"],
-    "Jon Snow": ["nights-watch"],
-    "Samwell Tarly": ["nights-watch"],
-    "Jeor Mormont": ["nights-watch"],
-    "Benjen Stark": ["nights-watch"],
+    "Joffrey Baratheon": ["baratheon", "lannister"],
+    "Catelyn Stark": ["stark", "tully"],
+    "Maester Aemon": ["nights-watch", "targaryen"],
+    "Jon Snow": ["nights-watch", "stark"],
+    "Samwell Tarly": ["nights-watch", "tarly"],
+    "Jeor Mormont": ["nights-watch", "mormont"],
+    "Benjen Stark": ["nights-watch", "stark"],
     "Bowen Marsh": ["nights-watch"],
     "Alliser Thorne": ["nights-watch"],
 }
@@ -42,7 +38,6 @@ if __name__ == '__main__':
 
     colors = {
         "stark": "#8c8",
-        "snow": "#9d9",
         "lannister": "#d22",
         "targaryen": "#b80",
         "baratheon": "#ffd700",
@@ -84,21 +79,15 @@ if __name__ == '__main__':
             }
             house = speaker.split()[-1].lower()
             groups = []
-            if speaker in MAIN_GROUP:
-                node["group"] = MAIN_GROUP[speaker]
-                node["color"] = colors[node["group"]]
-                groups.append(node["group"])
-
-            elif house in colors:
-                node["color"] = colors[house]
-                node["group"] = house
-                groups.append(house)
-
             if speaker in GROUP_ASSOCIATIONS:
-                groups += GROUP_ASSOCIATIONS[speaker]
+                groups = GROUP_ASSOCIATIONS[speaker]
+            elif house in colors:
+                groups.append(house)
 
             if groups:
                 node["groups"] = groups
+                node["group"] = groups[0]
+                node["color"] = colors[groups[0]]
 
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):
