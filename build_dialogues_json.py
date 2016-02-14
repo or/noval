@@ -17,6 +17,7 @@ IGNORED_NODES = {
 
 GROUP_ASSOCIATIONS = {
     "Joffrey Baratheon": ["baratheon", "lannister"],
+    "Tommen Baratheon": ["baratheon", "lannister"],
     "Catelyn Stark": ["stark", "tully"],
     "Maester Aemon": ["nights-watch", "targaryen"],
     "Jon Snow": ["nights-watch", "stark"],
