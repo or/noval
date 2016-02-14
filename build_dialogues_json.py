@@ -66,10 +66,10 @@ if __name__ == '__main__':
                 "id": new_id,
                 "name": speaker,
             }
-            house = speaker.split()[-1]
-            if house in groups:
-                node["color"] = colors[house.lower()]
-                node["group"] = house.lower()
+            house = speaker.split()[-1].lower()
+            if house in colors:
+                node["color"] = colors[house]
+                node["group"] = house
 
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):
