@@ -267,7 +267,11 @@ var Network = function() {
       this.group_map[g.id] = g;
 
       if (g.image) {
-          g.image_id = this.add_image(g.image, 1.5);
+          var aspect_ratio = 1.5;
+          if (g.shape == "circle") {
+            aspect_ratio = 1;
+          }
+          g.image_id = this.add_image(g.image, aspect_ratio);
       }
     }.bind(this));
 
@@ -391,11 +395,10 @@ var Network = function() {
       }
     }
 
-    this.banner_child = this.banner_parent.append("path")
+    this.banner_child = this.banner_parent.append("g")
       .style("fill", function(d, i) {
           return 'url(#' + d.image_id + ')';
       })
-      .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z")
       .style("filter", apply_filter)
       .on("mouseover", function(d) {
         if (d.prevent_hover) {
@@ -424,6 +427,21 @@ var Network = function() {
         }
         this.update();
       }.bind(this));
+
+    this.banner_child
+      .filter(function(d) { return d.shape == "shield" })
+      .append("path")
+      .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z");
+
+    // inside the banner box the width is 100, which is then scaled
+    // to different resolutions, so here we need to use a radius of 50
+    // and shift the center to (50, height / 2)
+    this.banner_child
+      .filter(function(d) { return d.shape == "circle" })
+      .append("circle")
+      .attr("cx", 50)
+      .attr("cy", 50 * this.banner_height / this.banner_width)
+      .attr("r", 50);
 
     this.banner.append("title")
       .text(function(d) { return d.name; });

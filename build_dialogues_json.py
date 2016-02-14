@@ -26,6 +26,9 @@ GROUP_ASSOCIATIONS = {
     "Benjen Stark": ["nights-watch", "stark"],
     "Bowen Marsh": ["nights-watch"],
     "Alliser Thorne": ["nights-watch"],
+    "Daenerys Targaryen": ["dothraki", "targaryen"],
+    "Drogo": ["dothraki"],
+    "Qotho": ["dothraki"],
 }
 
 if __name__ == '__main__':
@@ -41,6 +44,7 @@ if __name__ == '__main__':
         "stark": "#8c8",
         "lannister": "#d22",
         "targaryen": "#b80",
+        "dothraki": "#f80",
         "baratheon": "#ffd700",
         "mormont": "#fff",
         "tully": "#88c",
@@ -62,6 +66,11 @@ if __name__ == '__main__':
         banner_img = os.path.join(BANNER_DIR, house + ".jpg")
         if os.path.exists("html/" + banner_img):
             group_data["image"] = banner_img
+
+        if house == "dothraki":
+            group_data["shape"] = "circle"
+        else:
+            group_data["shape"] = "shield"
 
         groups.append(group_data)
 
