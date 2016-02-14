@@ -74,12 +74,13 @@ var Network = function() {
       network.force.resume();
     }
 
-    var initial_zoom = this.height / 500;
+    this.initial_zoom = this.height / 500;
     var zoom = d3.behavior.zoom()
       .scaleExtent([0.2, 8])
       .on("zoom", zoom.bind(this))
-      .translate([(this.width - initial_zoom * this.width) / 2, (this.height - initial_zoom * this.height) / 2])
-      .scale(initial_zoom);
+      .translate([(this.width - this.initial_zoom * this.width) / 2,
+                  (this.height - this.initial_zoom * this.height) / 2])
+      .scale(this.initial_zoom);
 
     this.defs = this.svg.append('svg:defs');
     var shadow = this.defs.append("filter")
@@ -97,14 +98,33 @@ var Network = function() {
       .attr("result", "blurOut")
       .attr("in", "offsetOut")
       .attr("stdDeviation", 1);
-    /*var merge = shadow.append("feMerge");
-    merge.append("feMergeNode")
-      .attr("in", "blurOut");
-    merge.append("feMergeNode")
-      .attr("in", "SourceGraphic");*/
     shadow.append("feBlend")
       .attr("in", "SourceGraphic")
       .attr("in2", "blurOut")
+      .attr("mode", "normal");
+
+    var shadow_high = this.defs.append("filter")
+      .attr("id", "shadow-high")
+      .attr("x", "-20%")
+      .attr("y", "-20%")
+      .attr("width", "200%")
+      .attr("height", "200%");
+    shadow_high.append("feOffset")
+      .attr("result", "offsetOut")
+      .attr("in", "SourceAlpha")
+      .attr("dx", 10)
+      .attr("dy", 10);
+    shadow_high.append("feGaussianBlur")
+      .attr("result", "blurOut")
+      .attr("in", "offsetOut")
+      .attr("stdDeviation", 1);
+    shadow_high.append("feColorMatrix")
+      .attr("result", "shadowOut")
+      .attr("in", "blurOut")
+      .attr("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0");
+    shadow_high.append("feBlend")
+      .attr("in", "SourceGraphic")
+      .attr("in2", "shadowOut")
       .attr("mode", "normal");
 
     this.pattern_id = 1;
@@ -114,9 +134,11 @@ var Network = function() {
       .call(zoom)
       .append("g")
       .attr("transform",
-            "translate(" + (this.width - initial_zoom * this.width) / 2 + "," +
-                           (this.height - initial_zoom * this.height) / 2 + ")" +
-            "scale(" + initial_zoom + "," + initial_zoom + ")");
+            "translate(" + (this.width - this.initial_zoom * this.width) / 2 + "," +
+                           (this.height - this.initial_zoom * this.height) / 2 + ")" +
+            "scale(" + this.initial_zoom + ")");
+
+    this.banner_bar = this.svg.append("g");
 
     this.graph.append("rect")
       .attr("x", -10000)
@@ -188,11 +210,78 @@ var Network = function() {
     this.update();
   }
 
+  this.add_image = function(path, aspect_ratio) {
+    var new_id = "pattern_" + this.pattern_id;
+    if (!aspect_ratio) {
+      aspect_ratio = 1;
+    }
+    var size = 100;
+    this.pattern_id += 1;
+    this.defs.append("svg:pattern")
+      .attr("id", new_id)
+      .attr("x", "0%")
+      .attr("y", "0%")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("viewBox", "0 0 " + size + " " + (size * aspect_ratio))
+      .append("svg:image")
+      .attr("xlink:href", path)
+      .attr("width", size)
+      .attr("height", size * aspect_ratio)
+      .attr("x", "0%")
+      .attr("y", "0%");
+
+    return new_id;
+  }
+
   this.load_data = function(data) {
     this.data = data;
     this.all_nodes = this.data.nodes.slice();
     this.all_edges = this.data.edges.slice();
     this.node_map = {};
+    this.group_map = {};
+
+    this.data.groups.forEach(function(g) {
+      this.group_map[g.id] = g;
+
+      if (g.image) {
+          g.image_id = this.add_image(g.image, 1.5);
+      }
+    }.bind(this));
+
+    this.banner_buttons = this.data.groups.filter(function(g) {
+      return g.image;
+    })
+    this.banner = this.banner_bar.selectAll("g.banner")
+        .data(this.banner_buttons, function(d) { return d.id; });
+
+    this.banner_width = 30 * this.initial_zoom;
+    this.banner_height = 45 * this.initial_zoom;
+    this.banner_space = 10 * this.initial_zoom;
+    this.banner_bar_position = {
+      x: (this.width - this.banner_buttons.length *
+             (this.banner_width + this.banner_space) - this.banner_space) / 2,
+      y: 10 * this.initial_zoom,
+    };
+
+    this.banner.enter().append("g")
+      .attr("id", function(d) { return "banner_" + d.id; })
+      .attr("class", "banner")
+      .attr("transform", function(d, i) {
+        return "translate(" +
+          (this.banner_bar_position.x +
+           i * (this.banner_width + this.banner_space)) +
+          "," + this.banner_bar_position.y + ")scale(" + (this.banner_width / 100) + ")";
+
+      }.bind(this))
+      .append("path")
+      .style("fill", function(d, i) {
+          return 'url(#' + d.image_id + ')';
+      })
+      .style("filter", "url(#shadow-high)")
+      .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z")
+
+    this.banner.exit().remove();
 
     this.all_nodes.forEach(function(n) {
       n.x = Math.floor(this.width / 2 + Math.random() * 100);
@@ -201,22 +290,7 @@ var Network = function() {
       n.weight = 1;
 
       if (n.image) {
-        n.image_id = "pattern_" + this.pattern_id;
-        var size = 100;
-        this.pattern_id += 1;
-        this.defs.append("svg:pattern")
-          .attr("id", n.image_id)
-          .attr("x", "0%")
-          .attr("y", "0%")
-          .attr("width", "100%")
-          .attr("height", "100%")
-          .attr("viewBox", "0 0 " + size + " " + size)
-          .append("svg:image")
-          .attr("xlink:href", n.image)
-          .attr("width", size)
-          .attr("height", size)
-          .attr("x", "0%")
-          .attr("y", "0%");
+          n.image_id = this.add_image(n.image);
       }
       this.node_map[n.id] = n;
 
@@ -347,7 +421,6 @@ var Network = function() {
       })
       .style("stroke", function(d) { return d.color || "#999"; })
       .style("stroke-width", 1.0)
-      .style("clip-path", function(d) { return "#circle"; })
       .style("fill", function(d) {
         if (d.image_id) {
           return 'url(#' + d.image_id + ')';
