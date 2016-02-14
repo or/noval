@@ -15,6 +15,11 @@ IGNORED_NODES = {
     "Rhaegar Targaryen",
 }
 
+GROUP_ASSOCIATIONS = {
+    "Joffrey Baratheon": ["lannister"],
+    "Catelyn Stark": ["tully"],
+}
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cutoff", type=float, default=0.05)
@@ -67,9 +72,17 @@ if __name__ == '__main__':
                 "name": speaker,
             }
             house = speaker.split()[-1].lower()
+            groups = []
             if house in colors:
                 node["color"] = colors[house]
                 node["group"] = house
+                groups.append(house)
+
+            if speaker in GROUP_ASSOCIATIONS:
+                groups += GROUP_ASSOCIATIONS[speaker]
+
+            if groups:
+                node["groups"] = groups
 
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):

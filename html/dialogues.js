@@ -110,21 +110,41 @@ var Network = function() {
       .attr("width", "200%")
       .attr("height", "200%");
     shadow_high.append("feOffset")
-      .attr("result", "offsetOut")
       .attr("in", "SourceAlpha")
       .attr("dx", 10)
-      .attr("dy", 10);
+      .attr("dy", 10)
+      .attr("result", "offsetOut");
     shadow_high.append("feGaussianBlur")
-      .attr("result", "blurOut")
       .attr("in", "offsetOut")
-      .attr("stdDeviation", 1);
+      .attr("stdDeviation", 1)
+      .attr("result", "blurOut");
     shadow_high.append("feColorMatrix")
-      .attr("result", "shadowOut")
       .attr("in", "blurOut")
-      .attr("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0");
+      .attr("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0")
+      .attr("result", "shadowOut");
     shadow_high.append("feBlend")
       .attr("in", "SourceGraphic")
       .attr("in2", "shadowOut")
+      .attr("mode", "normal");
+
+    var glow = this.defs.append("filter")
+      .attr("id", "glow")
+      .attr("x", "-100%")
+      .attr("y", "-100%")
+      .attr("width", "300%")
+      .attr("height", "300%");
+    glow.append("feColorMatrix")
+      .attr("in", "SourceAlpha")
+      .attr("type", "matrix")
+      .attr("values", "0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0")
+      .attr("result", "colorOut");
+    glow.append("feGaussianBlur")
+      .attr("in", "colorOut")
+      .attr("result", "blurOut")
+      .attr("stdDeviation", 10);
+    glow.append("feBlend")
+      .attr("in", "SourceGraphic")
+      .attr("in2", "glowOut")
       .attr("mode", "normal");
 
     this.pattern_id = 1;
@@ -185,7 +205,7 @@ var Network = function() {
     this.force_update();
 
     function dragstart(d) {
-      if (d.type == "intermediate") {
+      if (d.intermediate) {
         return;
       }
       d3.event.sourceEvent.stopPropagation();
@@ -193,7 +213,7 @@ var Network = function() {
     }
 
     function dragend(d) {
-      if (d.type == "intermediate") {
+      if (d.intermediate) {
         return;
       }
       d3.event.sourceEvent.stopPropagation();
@@ -249,42 +269,10 @@ var Network = function() {
       }
     }.bind(this));
 
-    this.banner_buttons = this.data.groups.filter(function(g) {
+    this.visible_groups = this.data.groups.filter(function(g) {
       return g.image;
-    })
-    this.banner = this.banner_bar.selectAll("g.banner")
-        .data(this.banner_buttons, function(d) { return d.id; });
+    });
 
-    this.banner_width = 30 * this.initial_zoom;
-    this.banner_height = 45 * this.initial_zoom;
-    this.banner_space = 10 * this.initial_zoom;
-    this.banner_bar_position = {
-      x: (this.width - this.banner_buttons.length *
-             (this.banner_width + this.banner_space) - this.banner_space) / 2,
-      y: 10 * this.initial_zoom,
-    };
-
-    this.banner.enter().append("g")
-      .attr("id", function(d) { return "banner_" + d.id; })
-      .attr("class", "banner")
-      .attr("transform", function(d, i) {
-        return "translate(" +
-          (this.banner_bar_position.x +
-           i * (this.banner_width + this.banner_space)) +
-          "," + this.banner_bar_position.y + ")scale(" + (this.banner_width / 100) + ")";
-
-      }.bind(this))
-      .append("path")
-      .style("fill", function(d, i) {
-          return 'url(#' + d.image_id + ')';
-      })
-      .style("filter", "url(#shadow-high)")
-      .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z")
-
-    this.banner.append("title")
-      .text(function(d) { return d.name; });
-
-    this.banner.exit().remove();
 
     this.all_nodes.forEach(function(n) {
       n.x = Math.floor(this.width / 2 + Math.random() * 100);
@@ -310,7 +298,9 @@ var Network = function() {
       var s = this.node_map[e.from],
           t = this.node_map[e.to],
           i = {id: s.id + "_" + t.id,
-               type: "intermediate"}; // intermediate node
+               intermediate: true,
+               node1: s,
+               node2: t}; // intermediate node
 
       if (s.image && t.image) {
         // if both real nodes have an image, then just set a flag here,
@@ -343,12 +333,126 @@ var Network = function() {
       this.max_edge_value_sum = Math.max(this.max_edge_value_sum, e.source.edge_value_sum);
       this.max_edge_value_sum = Math.max(this.max_edge_value_sum, e.target.edge_value_sum);
     }.bind(this));
+
+    this.all_nodes.forEach(function(n) {
+      if (!n.group) {
+        return;
+      }
+
+      var group = this.group_map[n.group];
+      if (!group.edge_value_sum) {
+        group.edge_value_sum = 0;
+      }
+
+      group.edge_value_sum += n.edge_value_sum;
+    }.bind(this));
+  }
+
+  this.build_banner_bar = function() {
+    this.visible_groups.sort(function(a, b) {
+      return b.edge_value_sum - a.edge_value_sum;
+    });
+
+    if (this.banner) {
+      this.banner.remove();
+    }
+
+    this.banner = this.banner_bar.selectAll("g.banner")
+        .data(this.visible_groups, function(d) { return d.id; });
+
+    this.banner_width = 30 * this.initial_zoom;
+    this.banner_height = 45 * this.initial_zoom;
+    this.banner_space = 10 * this.initial_zoom;
+    this.banner_bar_position = {
+      x: 10 * this.initial_zoom,
+      y: Math.max(
+          50 * this.initial_zoom,
+          (this.height - Math.round(this.visible_groups.length / 2) *
+          (this.banner_height + this.banner_space) - this.banner_space) / 2),
+    };
+
+    this.banner_parent = this.banner.enter().append("g")
+      .attr("id", function(d) { return "banner_" + d.id; })
+      .attr("class", "banner")
+      .style("filter", "url(#shadow-high)")
+      .attr("transform", function(d, i) {
+        var x = this.banner_bar_position.x + (i % 2) * (this.banner_width + this.banner_space);
+        var y = this.banner_bar_position.y + ~~(i / 2) * (this.banner_height + this.banner_space);
+        return "translate(" + x + "," + y + ")scale(" + (this.banner_width / 100) + ")";
+      }.bind(this));
+
+    function apply_filter(d) {
+      if (d.hover || d.selected) {
+        return "url(#glow)";
+      } else {
+        return null; //"url(#shadow-high)"
+      }
+    }
+
+    this.banner_child = this.banner_parent.append("path")
+      .style("fill", function(d, i) {
+          return 'url(#' + d.image_id + ')';
+      })
+      .attr("d", "m 99.523233,0.06290596 c 0.26113,21.26875304 0.24596,42.53749304 0,63.80624304 -0.23922,20.48887 -1.0327,36.480561 -8.17061,48.980061 -8.598528,15.0601 -22.924919,25.9306 -41.351779,36.6105 -18.430237,-10.6799 -32.754939,-21.5482 -41.3534688,-36.6105 -7.139609,-12.5039 -7.93477203,-28.493351 -8.17062003,-48.980061 -0.245961,-21.26875 -0.261128,-42.53749 0,-63.80624304 z")
+      .style("filter", apply_filter)
+      .on("mouseover", function(d) {
+        if (d.prevent_hover) {
+          return;
+        }
+        d.hover = true;
+        this.banner_child.style("filter", apply_filter);
+      }.bind(this))
+      .on("mouseout", function(d) {
+        d.hover = false;
+        d.prevent_hover = false;
+        this.banner_child.style("filter", apply_filter);
+      }.bind(this))
+      .on("click", function(d) {
+        d.selected = !d.selected;
+        d.hover = d.selected;
+        if (!d.selected) {
+          // if we unselect a banner, then the flow should disappear,
+          // but we also don't want it to reappear while the mouse is
+          // still inside the element, so prevent_hover protects against
+          // re-setting it... it is cleared on mouseout, restoring the
+          // normal hover behaviour afterwards
+          d.prevent_hover = true;
+        } else {
+          d.prevent_hover = false;
+        }
+        this.update();
+      }.bind(this));
+
+    this.banner.append("title")
+      .text(function(d) { return d.name; });
+
+    this.banner.exit().remove();
+  }
+
+  this.node_selected_by_group = function(n) {
+    if (!n.groups) {
+      return false;
+    }
+
+    var i;
+    for (i = 0; i < n.groups.length; ++i) {
+      if (this.group_map[n.groups[i]].selected) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   this.update = function() {
     var edges = [];
     var links = [];
     var linked_node_map = {};
+
+    var selected_groups = this.visible_groups.filter(function(g) {
+      return g.selected;
+    });
+
     this.all_edges.forEach(function(e) {
       var s = e.source,
           t = e.target,
@@ -363,6 +467,13 @@ var Network = function() {
         return;
       }
 
+      if (selected_groups.length) {
+        if (!this.node_selected_by_group(s) ||
+            !this.node_selected_by_group(t)) {
+          return;
+        }
+      }
+
       links.push({source: s, target: i, value: e.value, normalized_value: e.normalized_value},
                  {source: i, target: t, value: e.value, normalized_value: e.normalized_value});
       edges.push(e);
@@ -374,11 +485,28 @@ var Network = function() {
     var nodes = [];
     this.all_nodes.forEach(function(n) {
       if (this.linked_nodes_only.property("checked") && !linked_node_map[n.id]) {
-        return;
+        // we only care about linkedness when there aren't any groups selected,
+        // in other words: a selected group counts as "linked"
+        if (!selected_groups.length) {
+          return;
+        }
       }
 
       if (this.picture_nodes_only.property("checked") && !n.image) {
         return;
+      }
+
+      if (selected_groups.length) {
+        if (n.intermediate) {
+          if (!this.node_selected_by_group(n.node1) ||
+              !this.node_selected_by_group(n.node2)) {
+            return;
+          }
+        } else {
+          if (!this.node_selected_by_group(n)) {
+            return;
+          }
+        }
       }
 
       nodes.push(n);
@@ -457,6 +585,8 @@ var Network = function() {
       .text(function(d) { return d.name; });
 
     this.node.exit().remove();
+
+    this.build_banner_bar();
 
     this.force.start();
   }
