@@ -31,7 +31,13 @@
       position: absolute;
       top: 10px;
       right: 10px;
+      width: 200px;
       z-index: 100;
+    }
+
+    #cutoff-slider label {
+      position: relative;
+      bottom: -1.5rem;
     }
 
     #charge-slider {
@@ -42,12 +48,22 @@
       z-index: 100;
     }
 
+    #charge-slider label {
+      position: relative;
+      top: -1.5rem;
+    }
+
     #node-distance-slider {
       position: absolute;
       bottom: 10px;
       left: 250px;
       width: 200px;
       z-index: 100;
+    }
+
+    #node-distance-slider label {
+      position: relative;
+      top: -1.5rem;
     }
 
     #flags {
@@ -72,9 +88,15 @@
 <body onload="load_dialogues()">
 
 <div id="dialogues">
-  <div id="cutoff-slider"></div>
-  <div id="charge-slider"></div>
-  <div id="node-distance-slider"></div>
+  <div id="cutoff-slider">
+    <label>completeness <span class="value"></span></label>
+  </div>
+  <div id="charge-slider">
+    <label>graph size <span class="value"></span></label>
+  </div>
+  <div id="node-distance-slider">
+    <label>link spacing <span class="value"></span></label>
+  </div>
   <ul id="flags">
     <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
     <li><label><input id="picture-nodes-only" type="checkbox">picture nodes only</label></li>

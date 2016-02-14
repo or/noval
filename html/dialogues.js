@@ -9,8 +9,8 @@ var Network = function() {
       .min(0.01)
       .max(1)
       .value(0.54)
-      .orientation("vertical")
       .on("slide", function(evt, value) {
+        d3.select("#cutoff-slider label .value").text(value.toFixed(2));
         this.update();
       }.bind(this));
 
@@ -21,6 +21,7 @@ var Network = function() {
       .max(-500)
       .value(-70)
       .on("slide", function(evt, value) {
+        d3.select("#charge-slider label .value").text(-value.toFixed(0));
         this.force_update();
       }.bind(this));
 
@@ -31,6 +32,7 @@ var Network = function() {
       .max(80)
       .value(30)
       .on("slide", function(evt, value) {
+        d3.select("#node-distance-slider label .value").text(value.toFixed(0));
         this.force_update();
       }.bind(this));
 
