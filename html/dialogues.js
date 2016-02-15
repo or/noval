@@ -8,7 +8,7 @@ var Network = function() {
     this.cutoff_slider = d3.slider()
       .min(0.01)
       .max(1)
-      .value(0.54)
+      .value(0.51)
       .on("slide", function(evt, value) {
         d3.select("#cutoff-slider label .value").text(value.toFixed(2));
         this.update();
