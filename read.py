@@ -6,11 +6,12 @@ import argparse
 import json
 import re
 
+import ftfy
 from structure import ParagraphChunk
 
 CHAPTER = re.compile(r'^[A-Z ]+$')
 QUOTES = re.compile(r'(?:")')
-UNFINISHED = re.compile(r'.*([^".?!]|-)$')
+UNFINISHED = re.compile(r'.*([^".?!:]|-)$')
 INQUIT_KEYWORDS = re.compile(r'.*\W(said|asked|answered|shouted|observed)\W.*')
 QUOTED_TEXT = re.compile(r'^[A-Za-z0-9 ]+$')
 
@@ -20,6 +21,7 @@ RUN_ON_DIRECT = "<run-on-direct>"
 def paragraph_reader(input_filename):
     last_line = None
     for line in open(input_filename):
+        line = ftfy.fix_text(line).replace("…", "...")
         line = line.strip()
         if not line:
             continue
