@@ -196,16 +196,18 @@ class EntityDatabase(object):
                     real_gender = gender
                     break
 
-        for kind in ('person', 'organization', 'place'):
+        # "added" is used to track whether it was added at least once,
+        # but it could be added multiple times, so there is no break
+        # after "added" is set to True
+
+        # only do this matching for persons
+        for kind in ('person',):
+            if real_kind and kind != real_kind:
+                continue
+
             for known_entity in self.entities[kind]:
-                if real_kind and kind != real_kind:
-                    continue
-
-                if entity == known_entity:
-                    continue
-
-                if not (entity.startswith(known_entity + ' ') or
-                        real_entity in known_entity.split()):
+                if not (' ' + real_entity + ' ' in ' ' + known_entity + ' ' or
+                        ' ' + known_entity + ' ' in ' ' + real_entity + ' '):
                     continue
 
                 if real_title:
@@ -227,11 +229,13 @@ class EntityDatabase(object):
                 added = True
 
         if not added and real_kind:
-            self.entities[real_kind][real_entity] = set()
+            if real_entity not in self.entities[real_kind]:
+                self.entities[real_kind][real_entity] = set()
 
             self.entities[real_kind][real_entity].add(real_title)
             self.reverse_map[real_entity].add(tuple([real_kind, real_entity]))
-            self.reverse_map[real_title].add(tuple([real_kind, real_entity]))
+            if real_title:
+                self.reverse_map[real_title].add(tuple([real_kind, real_entity]))
 
             if real_entity != entity:
                 self.entities[real_kind][real_entity].add(entity)
