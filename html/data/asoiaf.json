@@ -1,0 +1,37 @@
+{
+  "groups": {
+    "path": "asoiaf/groups.json"
+  },
+  "books": [
+    {
+        "id": "01-got",
+        "path": "asoiaf/01-got.json",
+        "title": "A Game of Thrones"
+    },
+    {
+        "id": "02-cok",
+        "path": "asoiaf/02-cok.json",
+        "title": "A Clash of Kings"
+    },
+    {
+        "id": "03-sos",
+        "path": "asoiaf/03-sos.json",
+        "title": "A Storm of Swords"
+    },
+    {
+        "id": "04-ffc",
+        "path": "asoiaf/04-ffc.json",
+        "title": "A Feast for Crows"
+    },
+    {
+        "id": "05-dwd",
+        "path": "asoiaf/05-dwd.json",
+        "title": "A Dance with Dragons"
+    },
+    {
+        "id": "all-got",
+        "path": "asoiaf/all-got.json",
+        "title": "Complete"
+    }
+  ]
+}

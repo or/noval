@@ -622,11 +622,33 @@ var Network = function() {
   }
 }
 
+function fetch_all_data(filename, callback) {
+  var DATA_DIR = "data/";
+  jQuery.getJSON(DATA_DIR + "asoiaf.json", function(main_data) {
+    var deferreds = [];
+    deferreds.push(jQuery.getJSON(DATA_DIR + main_data.groups.path, function(data) {
+      main_data.groups.data = data;
+    }));
+
+    var i;
+    for (i = 0; i < main_data.books.length; ++i) {
+      var book = main_data.books[i];
+      deferreds.push(jQuery.getJSON(DATA_DIR + book.path, function(data) {
+        this.data = data;
+      }.bind(book)));
+    }
+
+    $.when.apply($, deferreds).then(function() {
+      callback(main_data);
+    });
+  });
+}
+
 function load_dialogues() {
   var network = new Network();
   document.network = network;
 
-  jQuery.getJSON("data/dialogues.json", function(data) {
-    network.load("#dialogues", data);
+  fetch_all_data("data/asoiaf.json", function(data) {
+    network.load("#graph", data);
   });
 }

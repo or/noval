@@ -39,57 +39,18 @@ GROUP_ASSOCIATIONS = {
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cutoff", type=float, default=0.05)
+    parser.add_argument("--groups")
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()
 
+    if args.groups:
+        known_groups = {x["id"]: x for x in json.load(open(args.groups))["groups"]}
+    else:
+        print("warning: no groups file specified")
+        known_groups = {}
+
     data = json.load(open(args.input))
-
-    colors = {
-        "stark": "#8c8",
-        "lannister": "#d22",
-        "targaryen": "#b80",
-        "dothraki": "#f80",
-        "baratheon": "#ffd700",
-        "mormont": "#fff",
-        "tully": "#88c",
-        "arryn": "#55a",
-        "greyjoy": "#777",
-        "frey": "#555",
-        "tarly": "#2f2",
-        "nights-watch": "#000",
-        "tyrell": "#ff0",
-        "unsullied": "#888",
-        "freefolk": "#ddd",
-        "martell": "#fa0",
-        "bolton": '#800',
-    }
-
-    groups = []
-    for group in colors:
-        if group == "dothraki":
-            name = "Dothraki"
-        elif group == "nights-watch":
-            name = "Night's Watch"
-        else:
-            name = "House " + group.capitalize(),
-
-        group_data = {
-            "id": group,
-            "name": name,
-            "color": colors[group],
-        }
-
-        banner_img = os.path.join(BANNER_DIR, group + ".jpg")
-        if os.path.exists("html/" + banner_img):
-            group_data["image"] = banner_img
-
-        if group == "dothraki":
-            group_data["shape"] = "circle"
-        else:
-            group_data["shape"] = "shield"
-
-        groups.append(group_data)
 
     node_map = {}
     nodes = []
@@ -109,13 +70,13 @@ if __name__ == '__main__':
             groups = []
             if speaker in GROUP_ASSOCIATIONS:
                 groups = GROUP_ASSOCIATIONS[speaker]
-            elif group in colors:
+            elif group in known_groups:
                 groups.append(group)
 
             if groups:
                 node["groups"] = groups
                 node["group"] = groups[0]
-                node["color"] = colors[groups[0]]
+                node["color"] = known_groups[groups[0]]["color"]
 
             img = os.path.join(IMAGE_DIR, speaker + ".jpg")
             if os.path.exists("html/" + img):
@@ -144,5 +105,5 @@ if __name__ == '__main__':
     edges = [{"from": k[0], "to": k[1], "value": v}
              for k, v in edge_map.items()]
 
-    json.dump({'nodes': nodes, 'edges': edges, 'groups': groups},
+    json.dump({'nodes': nodes, 'edges': edges},
               open(args.output, "w"))

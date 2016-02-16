@@ -1,0 +1,150 @@
+{
+    "groups": [
+        {
+            "id": "greyjoy",
+            "shape": "shield",
+            "image": "banners/greyjoy.jpg",
+            "color": "#777",
+            "name": [
+                "House Greyjoy"
+            ]
+        },
+        {
+            "id": "stark",
+            "shape": "shield",
+            "image": "banners/stark.jpg",
+            "color": "#8c8",
+            "name": [
+                "House Stark"
+            ]
+        },
+        {
+            "id": "tarly",
+            "shape": "shield",
+            "color": "#2f2",
+            "name": [
+                "House Tarly"
+            ]
+        },
+        {
+            "id": "bolton",
+            "shape": "shield",
+            "image": "banners/bolton.jpg",
+            "color": "#800",
+            "name": [
+                "House Bolton"
+            ]
+        },
+        {
+            "id": "mormont",
+            "shape": "shield",
+            "color": "#fff",
+            "name": [
+                "House Mormont"
+            ]
+        },
+        {
+            "id": "arryn",
+            "shape": "shield",
+            "image": "banners/arryn.jpg",
+            "color": "#55a",
+            "name": [
+                "House Arryn"
+            ]
+        },
+        {
+            "id": "dothraki",
+            "shape": "circle",
+            "image": "banners/dothraki.jpg",
+            "color": "#f80",
+            "name": "Dothraki"
+        },
+        {
+            "id": "tyrell",
+            "shape": "shield",
+            "image": "banners/tyrell.jpg",
+            "color": "#ff0",
+            "name": [
+                "House Tyrell"
+            ]
+        },
+        {
+            "id": "unsullied",
+            "shape": "shield",
+            "color": "#888",
+            "name": [
+                "House Unsullied"
+            ]
+        },
+        {
+            "id": "martell",
+            "shape": "shield",
+            "image": "banners/martell.jpg",
+            "color": "#fa0",
+            "name": [
+                "House Martell"
+            ]
+        },
+        {
+            "id": "lannister",
+            "shape": "shield",
+            "image": "banners/lannister.jpg",
+            "color": "#d22",
+            "name": [
+                "House Lannister"
+            ]
+        },
+        {
+            "id": "frey",
+            "shape": "shield",
+            "image": "banners/frey.jpg",
+            "color": "#555",
+            "name": [
+                "House Frey"
+            ]
+        },
+        {
+            "id": "nights-watch",
+            "shape": "shield",
+            "image": "banners/nights-watch.jpg",
+            "color": "#000",
+            "name": "Night's Watch"
+        },
+        {
+            "id": "freefolk",
+            "shape": "shield",
+            "image": "banners/freefolk.jpg",
+            "color": "#ddd",
+            "name": [
+                "House Freefolk"
+            ]
+        },
+        {
+            "id": "baratheon",
+            "shape": "shield",
+            "image": "banners/baratheon.jpg",
+            "color": "#ffd700",
+            "name": [
+                "House Baratheon"
+            ]
+        },
+        {
+            "id": "tully",
+            "shape": "shield",
+            "image": "banners/tully.jpg",
+            "color": "#88c",
+            "name": [
+                "House Tully"
+            ]
+        },
+        {
+            "id": "targaryen",
+            "shape": "shield",
+            "image": "banners/targaryen.jpg",
+            "color": "#b80",
+            "name": [
+                "House Targaryen"
+            ]
+        }
+    ]
+}
