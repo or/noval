@@ -19,8 +19,8 @@ GROUP_ASSOCIATIONS = {
     "Joffrey Baratheon": ["baratheon", "lannister"],
     "Tommen Baratheon": ["baratheon", "lannister"],
     "Catelyn Stark": ["stark", "tully"],
-    "Maester Aemon": ["nights-watch", "targaryen"],
-    "Jon Snow": ["nights-watch", "stark"],
+    "Aemon": ["nights-watch", "targaryen"],
+    "Jon Snow": ["nights-watch", "stark", "freefolk"],
     "Samwell Tarly": ["nights-watch", "tarly"],
     "Jeor Mormont": ["nights-watch", "mormont"],
     "Benjen Stark": ["nights-watch", "stark"],
@@ -29,6 +29,11 @@ GROUP_ASSOCIATIONS = {
     "Daenerys Targaryen": ["dothraki", "targaryen"],
     "Drogo": ["dothraki"],
     "Qotho": ["dothraki"],
+    "Grey Worm": ["unsullied"],
+    "Ygritte": ["freefolk"],
+    "Tormund Giantsbane": ["freefolk"],
+    "Mance Rayder": ["freefolk"],
+    "Osha": ["freefolk"],
 }
 
 if __name__ == '__main__':
@@ -53,6 +58,11 @@ if __name__ == '__main__':
         "frey": "#555",
         "tarly": "#2f2",
         "nights-watch": "#000",
+        "tyrell": "#ff0",
+        "unsullied": "#888",
+        "freefolk": "#ddd",
+        "martell": "#fa0",
+        "bolton": '#800',
     }
 
     groups = []

@@ -435,7 +435,7 @@ var Network = function() {
       .filter(function(d) { return d.shape == "shield" })
       .append("path")
       .attr("stroke-opacity", function(d) {
-        if (d.id == "nights-watch" || d.id == "targaryen") {
+        if (d.id == "nights-watch" || d.id == "targaryen" || d.id == "freefolk" || d.id == "bolton") {
           return 0.3;
         }
         return 0;
