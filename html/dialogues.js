@@ -309,7 +309,6 @@ var Network = function() {
   }
 
   this.load_data = function(book_data) {
-
     if (this.all_nodes) {
       // if we are switching, first grab the positions of all nodes,
       // so we can restore it
@@ -431,6 +430,9 @@ var Network = function() {
 
       group.edge_value_sum += n.edge_value_sum;
     }.bind(this));
+
+    this.build_banner_bar();
+    this.force_update();
   }
 
   this.build_book_bar = function() {
@@ -744,8 +746,6 @@ var Network = function() {
       .text(function(d) { return d.name; });
 
     this.node.exit().remove();
-
-    this.build_banner_bar();
 
     this.force.start();
   }
