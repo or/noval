@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 
 IMAGE_DIR = "pics/small"
 BANNER_DIR = "banners"
@@ -56,12 +57,15 @@ if __name__ == '__main__':
     nodes = []
     edge_map = {}
 
+    def name_to_id(name):
+        return re.sub(r'[^a-z]', '', name.lower().replace(' ', '-'))
+
     def get_node_id(speaker):
         if speaker in IGNORED_NODES:
             return None
 
         if speaker not in node_map:
-            new_id = len(nodes) + 1
+            new_id = name_to_id(speaker)
             node = {
                 "id": new_id,
                 "name": speaker,

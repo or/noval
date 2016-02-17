@@ -269,6 +269,9 @@ var Network = function() {
   }
 
   this.init_data = function(data) {
+    // maintain node positions, so they can be restored when the data set
+    // is swapped
+    this.node_position = {};
     this.data = data;
     this.group_map = {};
 
@@ -306,8 +309,22 @@ var Network = function() {
   }
 
   this.load_data = function(book_data) {
+
+    if (this.all_nodes) {
+      // if we are switching, first grab the positions of all nodes,
+      // so we can restore it
+      this.all_nodes.forEach(function(n) {
+        this.node_position[n.id] = {x: n.x, y: n.y};
+      }.bind(this));
+
+      this.intermediate_nodes.forEach(function(n) {
+        this.node_position[n.id] = {x: n.x, y: n.y};
+      }.bind(this));
+    }
+
     this.all_nodes = book_data.nodes.slice();
     this.all_edges = book_data.edges.slice();
+    this.intermediate_nodes = [];
     this.node_map = {};
 
     for (var group_id in this.group_map) {
@@ -315,8 +332,19 @@ var Network = function() {
     }
 
     this.all_nodes.forEach(function(n) {
-      n.x = Math.floor(this.width / 2 + Math.random() * 100);
-      n.y = Math.floor(this.height / 2 + Math.random() * 100);
+      var old_position = this.node_position[n.id];
+      if (old_position) {
+        n.x = old_position.x;
+        n.y = old_position.y;
+      } else {
+        var x, y;
+        do {
+          x = Math.random() * this.width - this.width / 2;
+          y = Math.random() * this.height - this.height / 2;
+        } while (x * x + y * y > this.height * this.height / 16);
+        n.x = Math.floor(this.width / 2 + x);
+        n.y = Math.floor(this.height / 2 + y);
+      }
       n.radius = 15;
       n.weight = 1;
 
@@ -341,6 +369,8 @@ var Network = function() {
                intermediate: true,
                node1: s,
                node2: t}; // intermediate node
+
+      this.intermediate_nodes.push(i);
 
       if (s.image && t.image) {
         // if both real nodes have an image, then just set a flag here,
