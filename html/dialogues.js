@@ -4,6 +4,7 @@ var Network = function() {
     this.dom_node = $(selector);
     this.width = this.dom_node.width() - 10;
     this.height = this.dom_node.height() - 10;
+    this.image_id_map = {};
 
     this.cutoff_slider = d3.slider()
       .min(0.01)
@@ -245,6 +246,11 @@ var Network = function() {
   }
 
   this.add_image = function(path, aspect_ratio) {
+    var cached = this.image_id_map[path];
+    if (cached) {
+      return cached;
+    }
+
     var new_id = "pattern_" + this.pattern_id;
     if (!aspect_ratio) {
       aspect_ratio = 1;
@@ -265,6 +271,7 @@ var Network = function() {
       .attr("x", "0%")
       .attr("y", "0%");
 
+    this.image_id_map[path] = new_id;
     return new_id;
   }
 
@@ -385,7 +392,7 @@ var Network = function() {
       }
 
       var old_position = this.node_position[i.id];
-      if (old_position) {
+      if (false && old_position) {
         i.x = old_position.x;
         i.y = old_position.y;
       } else {
