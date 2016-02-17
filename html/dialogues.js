@@ -69,8 +69,6 @@ var Network = function() {
     this.apply_filter = function(d) {
       if (d.hover || d.selected) {
         return "url(#glow)";
-      } else {
-        return "url(#shadow-high)";
       }
     }
 
