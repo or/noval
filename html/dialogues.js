@@ -363,9 +363,15 @@ var Network = function() {
 
     this.max_edge_value_sum = 0;
     this.all_edges.forEach(function(e) {
+      function make_intermediate_id(source, target) {
+        if (source.id < target.id) {
+          return source.id + "_" + target.id;
+        }
+        return target.id + "_" + source.id;
+      }
       var s = this.node_map[e.from],
           t = this.node_map[e.to],
-          i = {id: s.id + "_" + t.id,
+          i = {id: make_intermediate_id(s, t),
                intermediate: true,
                node1: s,
                node2: t}; // intermediate node
@@ -379,8 +385,14 @@ var Network = function() {
         i.image = true;
       }
 
-      i.x = (s.x + t.x) / 2;
-      i.y = (s.y + t.y) / 2;
+      var old_position = this.node_position[i.id];
+      if (old_position) {
+        i.x = old_position.x;
+        i.y = old_position.y;
+      } else {
+        i.x = (s.x + t.x) / 2;
+        i.y = (s.y + t.y) / 2;
+      }
 
       var v = e.value / this.max_edge_value;
       v = Math.sqrt(v);
