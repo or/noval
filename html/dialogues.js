@@ -371,9 +371,9 @@ var Network = function() {
     this.all_edges.forEach(function(e) {
       function make_intermediate_id(source, target) {
         if (source.id < target.id) {
-          return source.id + "_" + target.id;
+          return source.id + "-" + target.id;
         }
-        return target.id + "_" + source.id;
+        return target.id + "-" + source.id;
       }
       var s = this.node_map[e.from],
           t = this.node_map[e.to],
@@ -686,7 +686,12 @@ var Network = function() {
       this.link.remove();
     }
     this.link = this.graph.selectAll("line.link")
-      .data(edges, function(d) { return d.source.id + "_" + d.target.id; });
+      .data(edges, function(d) {
+        if (d.source.id < d.target.id) {
+          return d.source.id + "~" + d.target.id;
+        }
+        return d.target.id + "~" + d.source.id;
+      });
 
     this.link.enter().append("path")
       .attr("class", "link")

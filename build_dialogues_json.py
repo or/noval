@@ -58,7 +58,7 @@ if __name__ == '__main__':
     edge_map = {}
 
     def name_to_id(name):
-        return re.sub(r'[^a-z]', '', name.lower().replace(' ', '-'))
+        return re.sub(r'[^a-z_]', '', name.lower().replace(' ', '_'))
 
     def get_node_id(speaker):
         if speaker in IGNORED_NODES:
