@@ -322,10 +322,6 @@ var Network = function() {
       this.all_nodes.forEach(function(n) {
         this.node_position[n.id] = {x: n.x, y: n.y};
       }.bind(this));
-
-      this.intermediate_nodes.forEach(function(n) {
-        this.node_position[n.id] = {x: n.x, y: n.y};
-      }.bind(this));
     }
 
     this.all_nodes = book_data.nodes.slice();
@@ -342,6 +338,8 @@ var Network = function() {
       if (old_position) {
         n.x = old_position.x;
         n.y = old_position.y;
+        n.px = old_position.x;
+        n.py = old_position.y;
       } else {
         var x, y;
         do {
@@ -391,14 +389,8 @@ var Network = function() {
         i.image = true;
       }
 
-      var old_position = this.node_position[i.id];
-      if (false && old_position) {
-        i.x = old_position.x;
-        i.y = old_position.y;
-      } else {
-        i.x = (s.x + t.x) / 2;
-        i.y = (s.y + t.y) / 2;
-      }
+      i.x = (s.x + t.x) / 2;
+      i.y = (s.y + t.y) / 2;
 
       var v = e.value / this.max_edge_value;
       v = Math.sqrt(v);
