@@ -6,31 +6,37 @@
     {
         "id": "01-got",
         "path": "asoiaf/01-got.json",
+        "image": "01-got.jpg",
         "title": "A Game of Thrones"
     },
     {
         "id": "02-cok",
         "path": "asoiaf/02-cok.json",
+        "image": "02-cok.jpg",
         "title": "A Clash of Kings"
     },
     {
         "id": "03-sos",
         "path": "asoiaf/03-sos.json",
+        "image": "03-sos.jpg",
         "title": "A Storm of Swords"
     },
     {
         "id": "04-ffc",
         "path": "asoiaf/04-ffc.json",
+        "image": "04-ffc.jpg",
         "title": "A Feast for Crows"
     },
     {
         "id": "05-dwd",
         "path": "asoiaf/05-dwd.json",
+        "image": "05-dwd.jpg",
         "title": "A Dance with Dragons"
     },
     {
         "id": "all-got",
         "path": "asoiaf/all-got.json",
+        "image": "all-got.png",
         "title": "Complete"
     }
   ]

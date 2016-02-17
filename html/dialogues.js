@@ -65,6 +65,14 @@ var Network = function() {
       .attr("width", this.width)
       .attr("height", this.height);
 
+    this.apply_filter = function(d) {
+      if (d.hover || d.selected) {
+        return "url(#glow)";
+      } else {
+        return "url(#shadow-high)";
+      }
+    }
+
     function zoom() {
       if (d3.event.defaultPrevented) return;
       this.graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
@@ -161,6 +169,7 @@ var Network = function() {
             "scale(" + this.initial_zoom + ")");
 
     this.banner_bar = this.svg.append("g");
+    this.book_bar = this.svg.append("g");
 
     this.graph.append("rect")
       .attr("x", -10000)
@@ -231,8 +240,8 @@ var Network = function() {
       .on("dragstart", dragstart)
       .on("dragend", dragend);
 
-    this.load_data(data);
-    this.update();
+    this.init_data(data);
+    this.select_book(0);
   }
 
   this.add_image = function(path, aspect_ratio) {
@@ -259,14 +268,11 @@ var Network = function() {
     return new_id;
   }
 
-  this.load_data = function(data) {
+  this.init_data = function(data) {
     this.data = data;
-    this.all_nodes = this.data.nodes.slice();
-    this.all_edges = this.data.edges.slice();
-    this.node_map = {};
     this.group_map = {};
 
-    this.data.groups.forEach(function(g) {
+    this.data.groups.data.groups.forEach(function(g) {
       this.group_map[g.id] = g;
 
       if (g.image) {
@@ -278,10 +284,35 @@ var Network = function() {
       }
     }.bind(this));
 
-    this.visible_groups = this.data.groups.filter(function(g) {
+    this.visible_groups = this.data.groups.data.groups.filter(function(g) {
       return g.image;
     });
 
+    this.data.books.forEach(function(b) {
+      var aspect_ratio = 1.64;
+      b.image_id = this.add_image("covers/" + b.image, aspect_ratio);
+    }.bind(this));
+
+    this.build_book_bar();
+  }
+
+  this.select_book = function(index) {
+    this.data.books.forEach(function(b, i) {
+      b.selected = (i == index);
+    });
+    this.book_child.style("filter", this.apply_filter);
+    this.load_data(this.data.books[index].data);
+    this.update();
+  }
+
+  this.load_data = function(book_data) {
+    this.all_nodes = book_data.nodes.slice();
+    this.all_edges = book_data.edges.slice();
+    this.node_map = {};
+
+    for (var group_id in this.group_map) {
+      this.group_map[group_id].edge_value_sum = 0;
+    }
 
     this.all_nodes.forEach(function(n) {
       n.x = Math.floor(this.width / 2 + Math.random() * 100);
@@ -351,10 +382,74 @@ var Network = function() {
       var group = this.group_map[n.group];
       if (!group.edge_value_sum) {
         group.edge_value_sum = 0;
+        if (!n.color) {
+          n.color = group.color;
+        }
       }
 
       group.edge_value_sum += n.edge_value_sum;
     }.bind(this));
+  }
+
+  this.build_book_bar = function() {
+    if (this.book) {
+      this.book.remove();
+    }
+
+    this.book = this.book_bar.selectAll("g.banner")
+        .data(this.data.books, function(d) { return d.id; });
+
+    this.book_width = 30 * this.initial_zoom;
+    this.book_height = this.book_width * 1.64;
+    this.book_space = 10 * this.initial_zoom;
+    this.book_bar_position = {
+      x: this.width - this.book_width - this.book_space,
+      y: this.height - this.data.books.length * (this.book_height + this.book_space),
+    };
+
+    this.book_parent = this.book.enter().append("g")
+      .attr("id", function(d) { return "book_" + d.id; })
+      .attr("class", "book")
+      .style("filter", "url(#shadow-high)")
+      .attr("transform", function(d, i) {
+        var x = this.book_bar_position.x;
+        var y = this.book_bar_position.y + i * (this.book_height + this.book_space);
+        return "translate(" + x + "," + y + ")scale(" + (this.book_width / 100) + ")";
+      }.bind(this));
+
+    this.book_child = this.book_parent.append("g")
+      .style("fill", function(d, i) {
+          return 'url(#' + d.image_id + ')';
+      })
+      .style("filter", this.apply_filter)
+      .on("mouseover", function(d) {
+        d.hover = true;
+        this.book_child.style("filter", this.apply_filter);
+      }.bind(this))
+      .on("mouseout", function(d) {
+        d.hover = false;
+        this.book_child.style("filter", this.apply_filter);
+      }.bind(this))
+      .on("click", function(d, i) {
+        if (d.selected) {
+          return;
+        }
+        this.select_book(i);
+      }.bind(this));
+
+    // inside the book box the width is 100, which is then scaled
+    // to different resolutions
+    this.book_child
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", 100)
+      .attr("height", 100 * this.book_height / this.book_width);
+
+    this.book.append("title")
+      .text(function(d) { return d.title; });
+
+    this.book.exit().remove();
   }
 
   this.build_banner_bar = function() {
@@ -373,7 +468,7 @@ var Network = function() {
     this.banner_height = 45 * this.initial_zoom;
     this.banner_space = 10 * this.initial_zoom;
     this.banner_bar_position = {
-      x: 10 * this.initial_zoom,
+      x: this.banner_space,
       y: Math.max(
           50 * this.initial_zoom,
           (this.height - Math.round(this.visible_groups.length / 2) *
@@ -390,30 +485,22 @@ var Network = function() {
         return "translate(" + x + "," + y + ")scale(" + (this.banner_width / 100) + ")";
       }.bind(this));
 
-    function apply_filter(d) {
-      if (d.hover || d.selected) {
-        return "url(#glow)";
-      } else {
-        return null; //"url(#shadow-high)"
-      }
-    }
-
     this.banner_child = this.banner_parent.append("g")
       .style("fill", function(d, i) {
           return 'url(#' + d.image_id + ')';
       })
-      .style("filter", apply_filter)
+      .style("filter", this.apply_filter)
       .on("mouseover", function(d) {
         if (d.prevent_hover) {
           return;
         }
         d.hover = true;
-        this.banner_child.style("filter", apply_filter);
+        this.banner_child.style("filter", this.apply_filter);
       }.bind(this))
       .on("mouseout", function(d) {
         d.hover = false;
         d.prevent_hover = false;
-        this.banner_child.style("filter", apply_filter);
+        this.banner_child.style("filter", this.apply_filter);
       }.bind(this))
       .on("click", function(d) {
         d.selected = !d.selected;
