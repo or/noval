@@ -1,0 +1,9 @@
+slf4j*
+stanford-*
+*.class
+*.jar
+*.txt*
+*.epub
+*.rar
+generated.*
+*backup*
