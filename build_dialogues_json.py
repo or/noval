@@ -4,8 +4,7 @@ import json
 import os
 import re
 
-IMAGE_DIR = "pics/small"
-BANNER_DIR = "banners"
+IMAGE_DIR = "html/images/characters/small/"
 
 IGNORED_NODES = {
     "<unknown>",
@@ -82,8 +81,8 @@ if __name__ == '__main__':
                 node["group"] = groups[0]
                 node["color"] = known_groups[groups[0]]["color"]
 
-            img = os.path.join(IMAGE_DIR, speaker + ".jpg")
-            if os.path.exists("html/" + img):
+            img = speaker + ".jpg"
+            if os.path.exists(os.path.join(IMAGE_DIR, img)):
                 node["image"] = img
 
             nodes.append(node)

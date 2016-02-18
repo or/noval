@@ -1,3 +1,9 @@
+var DATA_PATH = "/data/";
+var IMAGE_PATH = "/images/";
+var BANNERS_PATH = IMAGE_PATH + "banners/";
+var COVERS_PATH = IMAGE_PATH + "covers/";
+var CHARACTERS_SMALL_PATH = IMAGE_PATH + "characters/small/";
+
 var Network = function() {
   this.load = function(selector, data) {
     var network = this;
@@ -288,7 +294,7 @@ var Network = function() {
           if (g.shape == "circle") {
             aspect_ratio = 1;
           }
-          g.image_id = this.add_image(g.image, aspect_ratio);
+          g.image_id = this.add_image(BANNERS_PATH + g.image, aspect_ratio);
       }
     }.bind(this));
 
@@ -298,7 +304,7 @@ var Network = function() {
 
     this.data.books.forEach(function(b) {
       var aspect_ratio = 1.64;
-      b.image_id = this.add_image("covers/" + b.image, aspect_ratio);
+      b.image_id = this.add_image(COVERS_PATH + b.image, aspect_ratio);
     }.bind(this));
 
     this.build_book_bar();
@@ -351,7 +357,7 @@ var Network = function() {
       n.weight = 1;
 
       if (n.image) {
-          n.image_id = this.add_image(n.image);
+          n.image_id = this.add_image(CHARACTERS_SMALL_PATH + n.image);
       }
       this.node_map[n.id] = n;
 
@@ -754,17 +760,16 @@ var Network = function() {
 }
 
 function fetch_all_data(filename, callback) {
-  var DATA_DIR = "data/";
-  jQuery.getJSON(DATA_DIR + "asoiaf.json", function(main_data) {
+  jQuery.getJSON(DATA_PATH + filename, function(main_data) {
     var deferreds = [];
-    deferreds.push(jQuery.getJSON(DATA_DIR + main_data.groups.path, function(data) {
+    deferreds.push(jQuery.getJSON(DATA_PATH + main_data.groups.path, function(data) {
       main_data.groups.data = data;
     }));
 
     var i;
     for (i = 0; i < main_data.books.length; ++i) {
       var book = main_data.books[i];
-      deferreds.push(jQuery.getJSON(DATA_DIR + book.path, function(data) {
+      deferreds.push(jQuery.getJSON(DATA_PATH + book.path, function(data) {
         this.data = data;
       }.bind(book)));
     }
@@ -775,11 +780,11 @@ function fetch_all_data(filename, callback) {
   });
 }
 
-function load_dialogues() {
+function load_dialogues(data_file, selector) {
   var network = new Network();
   document.network = network;
 
-  fetch_all_data("data/asoiaf.json", function(data) {
-    network.load("#graph", data);
+  fetch_all_data(data_file, function(data) {
+    network.load(selector, data);
   });
 }
