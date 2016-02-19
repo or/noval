@@ -10,6 +10,7 @@
   <meta property="og:image" content="http://novels.lol/images/game-of-thrones-preview-2.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="fb:app_id" content="1718865255040438" />
 
   <link type="text/css" href="/css/d3.slider.css" rel="stylesheet"/>
   <style type="text/css">
@@ -97,6 +98,10 @@
     .book {
       cursor: pointer;
     }
+
+    .fb-like {
+      margin-left: 1rem;
+    }
   </style>
 
   <script type="text/javascript" src="/js/jquery.min.js"></script>
@@ -106,7 +111,6 @@
 </head>
 
 <body onload="load_dialogues('asoiaf.json', '#graph')">
-
 <div id="graph">
   <div id="slider-box">
     <div id="cutoff-slider">
@@ -120,7 +124,13 @@
     </div>
   </div>
   <div id="controls">
-    <a href="/">Home</a>
+    <a href="/" style="position: relative; top: -0.2rem;">Home</a>
+    <div
+      class="fb-like"
+      data-share="true"
+      data-width="450"
+      data-show-faces="false">
+    </div>
     <ul>
       <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
       <li><label><input id="picture-nodes-only" type="checkbox">picture nodes only</label></li>
@@ -129,5 +139,25 @@
     <button id="deselect-banners">Deselect banners</button>
   </div>
 </div>
+<div id="fb-root"></div>
 </body>
+
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '1718865255040438',
+      xfbml      : true,
+      version    : 'v2.5'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+
 </html>
