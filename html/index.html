@@ -1,0 +1,90 @@
+<html>
+<head>
+<title>Novel analysis</title>
+<style>
+body {
+  background: #000;
+  padding: 2rem;
+  color: #eee;
+}
+
+a img {
+  border: 0;
+}
+
+a, a:hover, a:visited {
+  color: #0af;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0af;
+  text-decoration: underline;
+}
+
+.disclaimer {
+  border: 1px solid #ccc;
+  width: 30rem;
+  padding: 0.5rem;
+  text-align: justify;
+  margin-top: 2rem;
+}
+
+.disclaimer .heading {
+  font-weight: bold;
+  margin-top: 0;
+}
+
+.disclaimer div {
+  margin-top: 1rem;
+}
+
+p {
+  width: 50rem;
+}
+
+a label {
+  display: block;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+  <p>
+    This project tries to parse out all entities in a novel and figure out, who
+    is talking to who how often and what about. The resulting data is visualized
+    interactively, so one can play with it and hopefully some interesting
+    observations can be made.
+  </p>
+  <p>
+    The "A Song of Ice and Fire" series is a particularly interesting subject,
+    due to the immense number of characters and the complex network of
+    families, affiliations and politics.
+  </p>
+  <a href="/game-of-thrones/">
+    <label>A Song of Ice and Fire (Game of Thrones)</label>
+    <img alt="Game of Thrones" src="/images/covers/all-got.png"/>
+  </a>
+
+  <p>
+    The analysis is not perfect. Sometimes it isn't so easy to decide who is talking
+    and to whom. The project is a work in progress. That being said, the vast majority
+    of dialogues should be parsed correctly, even if the odd sentence is misattributed.
+  </p>
+  <p>
+    It's also quite strange, that according to the algorithm, Hodor spoke over
+    a hundred different words. ;)
+  </p>
+
+  <div class="disclaimer">
+    <div class="heading">Disclaimer</div>
+    <div>The A Song of Ice and Fire series and its characters were created and are owned by <a target="_blank" href="http://www.georgerrmartin.com/">George R.R. Martin</a>,
+    who holds the copyright. This project is not affiliated with George R.R. Martin. </div>
+    <div>Some images and graphics used on this website were created and are owned by <a target="_blank" href="https://hbo.com">HBO</a>, the copyright of which is held by HBO.
+    All trademarks and registered trademarks present in the images are proprietary to HBO, the inclusion of which implies
+    no affiliation with this project. The use of such images is believed to fall under the fair use of
+    copyright law. The copyright holder can request their removal at any time.</div>
+  </div>
+</body>
+</html>

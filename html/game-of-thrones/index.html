@@ -18,6 +18,16 @@
       color: #fff;
     }
 
+    a, a:hover, a:visited {
+      color: #0af;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #0af;
+      text-decoration: underline;
+    }
+
     #graph {
       position: absolute;
       top: 0;
@@ -97,9 +107,10 @@
     </div>
   </div>
   <ul id="flags">
+    <li><a href="/" style="margin-left: 1rem;">Home</a></li>
     <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
     <li><label><input id="picture-nodes-only" type="checkbox">picture nodes only</label></li>
-    <li><label><input id="allow-pinning" type="checkbox">drag-and-drop pins nodes (disabling unpins all)</label></li>
+    <li><label><input id="allow-pinning" type="checkbox">pin nodes with click (disabling unpins all)</label></li>
   </ul>
 </div>
 </body>
