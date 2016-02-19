@@ -84,6 +84,14 @@ var Network = function() {
       }
     }.bind(this));
 
+    this.deselect_banners = d3.select("#deselect-banners");
+    this.deselect_banners.on("click", function(e) {
+      this.visible_groups.forEach(function(g) {
+        g.selected = false;
+      });
+      this.update();
+    }.bind(this));
+
     d3.select(selector + " svg").remove();
     this.svg = d3.select(selector).append("svg")
       .attr("width", this.width)
@@ -783,6 +791,7 @@ var Network = function() {
     this.node.exit().remove();
 
     this.force.start();
+    this.build_banner_bar();
   }
 }
 

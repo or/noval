@@ -72,7 +72,7 @@
       margin-top: 2.5rem;
     }
 
-    #flags {
+    #controls {
       position: absolute;
       top: 10px;
       left: 10px;
@@ -81,7 +81,12 @@
       z-index: 100;
     }
 
-    #flags li {
+    #controls ul {
+      padding: 5px;
+      margin: 0.5rem 0;
+    }
+
+    #controls ul li {
       list-style-type: none;
     }
 
@@ -114,12 +119,15 @@
       <label>link length <span class="value"></span></label>
     </div>
   </div>
-  <ul id="flags">
-    <li><a href="/" style="margin-left: 1rem;">Home</a></li>
-    <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
-    <li><label><input id="picture-nodes-only" type="checkbox">picture nodes only</label></li>
-    <li><label><input id="allow-pinning" type="checkbox">pin nodes with click (disabling unpins all)</label></li>
-  </ul>
+  <div id="controls">
+    <a href="/">Home</a>
+    <ul>
+      <li><label><input id="linked-nodes-only" type="checkbox">linked nodes only</label></li>
+      <li><label><input id="picture-nodes-only" type="checkbox">picture nodes only</label></li>
+      <li><label><input id="allow-pinning" type="checkbox">pin nodes with click (disabling unpins all)</label></li>
+    </ul>
+    <button id="deselect-banners">Deselect banners</button>
+  </div>
 </div>
 </body>
 </html>
