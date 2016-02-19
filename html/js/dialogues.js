@@ -17,10 +17,10 @@ var Network = function() {
       .max(1)
       .value(0.45)
       .on("slide", function(evt, value) {
-        d3.select("#cutoff-slider label .value").text(value.toFixed(2));
+        d3.select("#cutoff-slider label .value").text((100 * value).toFixed(0) + ' %');
         this.update();
       }.bind(this));
-    d3.select("#cutoff-slider label .value").text(this.cutoff_slider.value().toFixed(2));
+    d3.select("#cutoff-slider label .value").text((100 * this.cutoff_slider.value()).toFixed(0) + ' %');
     d3.select("#cutoff-slider").call(this.cutoff_slider);
 
     this.charge_slider = d3.slider()
