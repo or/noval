@@ -225,6 +225,9 @@ var Network = function() {
       this.force.start();
     }
 
+    if (this.force) {
+      this.force.stop();
+    }
     this.force = d3.layout.force()
       .on("tick", function() {
         this.link.attr("d", function(d) {
