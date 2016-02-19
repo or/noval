@@ -3,6 +3,18 @@ var IMAGE_PATH = "/images/";
 var BANNERS_PATH = IMAGE_PATH + "banners/";
 var COVERS_PATH = IMAGE_PATH + "covers/";
 var CHARACTERS_SMALL_PATH = IMAGE_PATH + "characters/small/";
+var GRAVITY = 0.1;
+
+var initial_configuration = [{"id":"bronn","x":582.4333273672327,"y":393.5839173228562},{"id":"oberyn_martell","x":610.1042604645922,"y":474.7111144978879},{"id":"tyrion_lannister","x":537.0464135687433,"y":456.6012375979708},{"id":"daenerys_targaryen","x":661.7255954248515,"y":546.764500721908},{"id":"brynden_tully","x":665,"y":535},{"id":"jaime_lannister","x":476.1718321399371,"y":391.95520255491533},{"id":"cersei_lannister","x":456.1262852452475,"y":460.6109465907577},{"id":"brienne_of_tarth","x":505.37843869311655,"y":313.48252242073295},{"id":"jorah_mormont","x":611.095632026659,"y":518.3247903096949},{"id":"asha_greyjoy","x":813.5351491697872,"y":563.6683177836819},{"id":"sandor_clegane","x":569.2543425576779,"y":300.6520280087628},{"id":"mance_rayder","x":774.301598584061,"y":270.67622484822823},{"id":"jon_snow","x":736.2415198288844,"y":334.2183002317025},{"id":"bowen_marsh","x":808.9186053402666,"y":355.8563159756841},{"id":"arya_stark","x":642.6662196995944,"y":330.06054303689376},{"id":"robb_stark","x":451.8421937318454,"y":277.51955252851604},{"id":"petyr_baelish","x":558.8809686601595,"y":548.3691545609149},{"id":"davos_seaworth","x":803.5693082212092,"y":434.2202305178319},{"id":"theon_greyjoy","x":801.9330446228516,"y":508.5030176947015},{"id":"varys","x":487.8122543395513,"y":498.42710178314337},{"id":"balon_greyjoy","x":824.7772221208339,"y":471.2631429666085},{"id":"joffrey_baratheon","x":722,"y":260},{"id":"pycelle","x":530.6573073314676,"y":612.1961335388239},{"id":"kevan_lannister","x":533.4993029256989,"y":374.3621265613936},{"id":"mordane","x":873,"y":600},{"id":"jory_cassel","x":912,"y":497},{"id":"catelyn_stark","x":432.9775639489536,"y":334.2012082562854},{"id":"robert_baratheon","x":452.64616416835213,"y":580.0810821018059},{"id":"loras_tyrell","x":871,"y":453},{"id":"rodrik_cassel","x":923,"y":564},{"id":"tywin_lannister","x":598.5928333332171,"y":434.60291089566886},{"id":"bran_stark","x":626.8815537162257,"y":201.05337580094934},{"id":"renly_baratheon","x":946,"y":612},{"id":"sansa_stark","x":605.8605861453174,"y":613.635821738573},{"id":"robert_arryn","x":1007,"y":490},{"id":"eddard_stark","x":482.44148601000967,"y":546.75408023963},{"id":"alliser_thorne","x":930,"y":339},{"id":"lysa_arryn","x":651.4691593909345,"y":646.7833590537875},{"id":"benjen_stark","x":964,"y":320},{"id":"stannis_baratheon","x":771.4542688592924,"y":405.58303150428384},{"id":"tommen_baratheon","x":784,"y":303},{"id":"gendry","x":660.3267479112609,"y":271.9125864083371},{"id":"margaery_tyrell","x":400.53096813032226,"y":446.246001088471},{"id":"roose_bolton","x":879,"y":488},{"id":"daario_naharis","x":698.6667589804052,"y":489.5583479121372},{"id":"osha","x":912,"y":269},{"id":"walder_frey","x":993,"y":369},{"id":"ramsay_bolton","x":756.0289012514381,"y":524.7576057524104},{"id":"luwin","x":560.6036984923456,"y":212.13573558629133},{"id":"hodor","x":703.5761728528659,"y":205.87240343399338},{"id":"tormund_giantsbane","x":807.1434726651938,"y":310.56785350560625},{"id":"jeor_mormont","x":727.3985732265897,"y":390.58203597392964},{"id":"aemon","x":680.8254070871562,"y":374.89059878563086},{"id":"syrio_forel","x":600.2112965067637,"y":263.7409825625326},{"id":"viserys_targaryen","x":867,"y":224},{"id":"drogo","x":731.2843456793665,"y":569.1613100568563},{"id":"samwell_tarly","x":638,"y":348},{"id":"old_nan","x":890,"y":378},{"id":"ilyn_payne","x":823,"y":462},{"id":"myrcella_baratheon","x":796,"y":290},{"id":"grey_worm","x":702.2032940957386,"y":608.1547394801664},{"id":"ygritte","x":719.7676805627889,"y":269.049435336411},{"id":"qotho","x":759,"y":557},{"id":"gregor_clegane","x":977,"y":303},{"id":"olenna_tyrell","x":876,"y":621}];
+var initial_middle = {x: 0, y: 0, count: 0};
+initial_configuration.forEach(function(n) {
+  initial_middle.x += n.x;
+  initial_middle.y += n.y;
+  initial_middle.count += 1;
+});
+initial_middle.x /= initial_middle.count;
+initial_middle.y /= initial_middle.count;
+initial_middle.x -= 60;
 
 var Network = function() {
   this.load = function(selector, data) {
@@ -192,7 +204,7 @@ var Network = function() {
     this.force_update = function() {
       this.force
         .size([this.width, this.height])
-        .gravity(0.1)
+        .gravity(GRAVITY)
         .charge(function(d) {
           if (d.intermediate) {
             return 0.2 * network.charge_slider.value();
@@ -251,7 +263,7 @@ var Network = function() {
       .on("dragend", dragend);
 
     this.init_data(data);
-    this.select_book(this.selected_book || 0);
+    this.select_book(this.selected_book || 5);
   }
 
   this.add_image = function(path, aspect_ratio) {
@@ -332,6 +344,13 @@ var Network = function() {
       this.all_nodes.forEach(function(n) {
         this.node_position[n.id] = {x: n.x, y: n.y};
       }.bind(this));
+    } else {
+      initial_configuration.forEach(function(n) {
+        this.node_position[n.id] = {
+          x: this.width / 2 + (n.x - initial_middle.x) * 0.5,
+          y: this.height / 2 + (n.y - initial_middle.y) * 0.5,
+        };
+      }.bind(this));
     }
 
     this.all_nodes = book_data.nodes.slice();
@@ -358,6 +377,8 @@ var Network = function() {
         } while (x * x + y * y > this.height * this.height / 16);
         n.x = Math.floor(this.width / 2 + x);
         n.y = Math.floor(this.height / 2 + y);
+        n.px = n.x;
+        n.py = n.y;
       }
       n.radius = 15;
       n.weight = 1;
