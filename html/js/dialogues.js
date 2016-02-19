@@ -473,7 +473,7 @@ var Network = function() {
       this.book.remove();
     }
 
-    this.book = this.book_bar.selectAll("g.banner")
+    this.book = this.book_bar.selectAll("g.book")
         .data(this.data.books, function(d) { return d.id; });
 
     this.book_width = 30 * this.scale_factor;
