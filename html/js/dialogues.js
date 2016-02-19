@@ -12,6 +12,10 @@ var Network = function() {
     this.height = this.dom_node.height() - 10;
     this.image_id_map = {};
 
+    d3.select(window).on('resize', function() {
+      this.load(selector, data);
+    }.bind(this));
+
     this.cutoff_slider = d3.slider()
       .min(0.01)
       .max(1)
@@ -68,6 +72,7 @@ var Network = function() {
       }
     }.bind(this));
 
+    d3.select(selector + " svg").remove();
     this.svg = d3.select(selector).append("svg")
       .attr("width", this.width)
       .attr("height", this.height);
@@ -89,13 +94,13 @@ var Network = function() {
       network.force.resume();
     }
 
-    this.initial_zoom = this.height / 500;
+    this.scale_factor = this.height / 500;
     var zoom = d3.behavior.zoom()
       .scaleExtent([0.2, 8])
       .on("zoom", zoom.bind(this))
-      .translate([(this.width - this.initial_zoom * this.width) / 2,
-                  (this.height - this.initial_zoom * this.height) / 2])
-      .scale(this.initial_zoom);
+      .translate([(this.width - this.scale_factor * this.width) / 2,
+                  (this.height - this.scale_factor * this.height) / 2])
+      .scale(this.scale_factor);
 
     this.defs = this.svg.append('svg:defs');
     var shadow = this.defs.append("filter")
@@ -169,9 +174,9 @@ var Network = function() {
       .call(zoom)
       .append("g")
       .attr("transform",
-            "translate(" + (this.width - this.initial_zoom * this.width) / 2 + "," +
-                           (this.height - this.initial_zoom * this.height) / 2 + ")" +
-            "scale(" + this.initial_zoom + ")");
+            "translate(" + (this.width - this.scale_factor * this.width) / 2 + "," +
+                           (this.height - this.scale_factor * this.height) / 2 + ")" +
+            "scale(" + this.scale_factor + ")");
 
     this.banner_bar = this.svg.append("g");
     this.book_bar = this.svg.append("g");
@@ -246,7 +251,7 @@ var Network = function() {
       .on("dragend", dragend);
 
     this.init_data(data);
-    this.select_book(0);
+    this.select_book(this.selected_book || 0);
   }
 
   this.add_image = function(path, aspect_ratio) {
@@ -311,6 +316,7 @@ var Network = function() {
   }
 
   this.select_book = function(index) {
+    this.selected_book = index;
     this.data.books.forEach(function(b, i) {
       b.selected = (i == index);
     });
@@ -446,9 +452,9 @@ var Network = function() {
     this.book = this.book_bar.selectAll("g.banner")
         .data(this.data.books, function(d) { return d.id; });
 
-    this.book_width = 30 * this.initial_zoom;
+    this.book_width = 30 * this.scale_factor;
     this.book_height = this.book_width * 1.64;
-    this.book_space = 10 * this.initial_zoom;
+    this.book_space = 10 * this.scale_factor;
     this.book_bar_position = {
       x: this.width - this.book_width - this.book_space,
       y: this.height - this.data.books.length * (this.book_height + this.book_space),
@@ -511,15 +517,12 @@ var Network = function() {
     this.banner = this.banner_bar.selectAll("g.banner")
         .data(this.visible_groups, function(d) { return d.id; });
 
-    this.banner_width = 30 * this.initial_zoom;
-    this.banner_height = 45 * this.initial_zoom;
-    this.banner_space = 10 * this.initial_zoom;
+    this.banner_width = 30 * this.scale_factor;
+    this.banner_height = 45 * this.scale_factor;
+    this.banner_space = 10 * this.scale_factor;
     this.banner_bar_position = {
       x: this.banner_space,
-      y: Math.max(
-          50 * this.initial_zoom,
-          (this.height - Math.round(this.visible_groups.length / 2) *
-          (this.banner_height + this.banner_space) - this.banner_space) / 2),
+      y: this.height - ~~(this.visible_groups.length / 2) * (this.banner_height + this.banner_space),
     };
 
     this.banner_parent = this.banner.enter().append("g")
