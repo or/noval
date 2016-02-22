@@ -58,6 +58,39 @@ One example of a surprise:
    missed it, I realized that the novel only refers to them as "the man" or "he" and "the woman" or "she", which
    of course is beyond the understanding capabilities of the script.
 
+## Usage
+The steps are as follows:
+```bash
+echo "reading..."
+./read.py $1
+echo "parsing..."
+java -classpath . Parser $1.read
+echo "assigning entities..."
+./assign_entities.py $1.read.tagged
+echo "normalizing entities..."
+./normalize_entities.py $1.read.tagged.entities
+echo "generate statistics..."
+./generate_stats.py $1.read.tagged.entities.normalized
+```
+It's single scripts because each step can take a while and since there might be manual steps to clean up data or annotate
+it, I made each script standalone.
+
+ * read: read a text file in, trying to parse chapters, paragraphs, chunks of a paragraph 
+   (indirect speech, inquit, direct speech), output that to `$1.read` in JSON format
+ * parse: use the Stanford POS Tagger, to recognize all words in all sentences, include that info in the JSON, output
+   to `$1.tagged`
+ * assign entities: guess which entity is speaker for all direct speech chunks, write to `$1.entities`
+ * normalize entities: map all raw entities to a canonical name, as defined by `entities.json`, e.g. Tyrion Lannister,
+   Tyrion, dwarf, imp, halfman... are all aliases for the same character, write to `$1.normalized`
+ * generate statistics: read all the data and aggregate it into something useful, write to `$1.stats`
+
+Finally there's a script `./build_dialogues_json.py` that uses the stats file to generate JSON data for the visualization.
+
+A semi-manual step is needed after parsing and before assigning entities: `find_potential_entities.py` reads (or creates a fresh) `entities.json`, reads the tagged data, and guesses which entities are persons, based on titles and such. It
+generates `generated.entities.json`, which can be used to update `entities.json`. However, `entities.json` requires quite
+a bit of manual work to map all aliases to the same character and decide which entities to ignore, it also allows
+specifying some whitelist for words that should be treated as entities, even tho the tagger tagged them as normal words.
+
 ## Disclaimer
 The A Song of Ice and Fire series and its characters were created and are owned by George R.R. Martin, 
 who holds the copyright. This project is not affiliated with George R.R. Martin.
