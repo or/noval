@@ -403,6 +403,10 @@
         "skinny"
     ],
     "person": {
+        "Jaqen H'ghar": [
+          "Faceless Man",
+          "Jaqen"
+        ],
         "Germund Botley": [
             "Botley",
             "Germund",
@@ -6077,7 +6081,6 @@
         "FOLK",
         "FROM HERE TO THERE",
         "Face",
-        "Faceless Man",
         "Faceless Men",
         "Faceless Men of Braavos",
         "Fair Isle",
@@ -6923,8 +6926,6 @@
         "Jaime Jaime Jaime",
         "Jaime the Kingslayer",
         "Jammos",
-        "Jaqen",
-        "Jaqen H'ghar",
         "Jared of House Frey",
         "Jarl",
         "Jarman",
