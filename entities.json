@@ -403,6 +403,10 @@
         "skinny"
     ],
     "person": {
+        "Praed": [
+            "sellsword",
+            "Sellsword"
+        ],
         "Jaqen H'ghar": [
           "Faceless Man",
           "Jaqen"
@@ -2202,8 +2206,6 @@
             "Lord Rosby"
         ],
         "Grey Worm": [
-            "Grey",
-            "Worm"
         ],
         "Mellario of Norvos": [
             "Lady",
@@ -8100,7 +8102,6 @@
         "Powdered",
         "Power",
         "Poxy Tym",
-        "Praed",
         "Prayer",
         "Prendahl",
         "Press",
