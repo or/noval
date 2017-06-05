@@ -3,7 +3,7 @@
 echo "reading..."
 #./read.py $1
 echo "parsing..."
-#java -classpath . Parser $1.read
+#java -classpath .:stanford-postagger.jar Parser $1.read
 echo "assigning entities..."
 ./assign_entities.py $1.read.tagged
 echo "normalizing entities..."
