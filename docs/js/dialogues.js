@@ -1,5 +1,5 @@
-var DATA_PATH = "/data/";
-var IMAGE_PATH = "/images/";
+var DATA_PATH = "../data/";
+var IMAGE_PATH = "../images/";
 var BANNERS_PATH = IMAGE_PATH + "banners/";
 var COVERS_PATH = IMAGE_PATH + "covers/";
 var CHARACTERS_SMALL_PATH = IMAGE_PATH + "characters/small/";
